@@ -15,18 +15,26 @@ from matutils import poseMatrix
 
 def init_pygame(window_size):
     pygame.init()
-    screen = pygame.display.set_mode(window_size, pygame.DOUBLEBUF | pygame.OPENGL, 24)
+    pygame.display.set_mode(window_size, pygame.DOUBLEBUF | pygame.OPENGL, 24)
+    pygame.display.set_caption("Olympics Paris 2024")
 
 
 def init_opengl(window_size):
     glViewport(0, 0, window_size[0], window_size[1])
     glClearColor(0.7, 0.7, 1.0, 1.0)
     glEnable(GL_CULL_FACE)
-    glEnableClientState(GL_VERTEX_ARRAY)
+    # glEnableClientState(GL_VERTEX_ARRAY)
     glEnable(GL_DEPTH_TEST)
 
 
-def render_loop(camera, model, texture, vao, texture_unit, pvm_loc):
+def render_loop(camera, model, texture, vao, shaders):
+    glUseProgram(shaders)
+
+    texture_unit = 0
+    sampler_loc = glGetUniformLocation(shaders, "texture_sampler")
+    glUniform1i(sampler_loc, texture_unit)
+    pvm_loc = glGetUniformLocation(shaders, "PVM")
+
     running = True
     mouse_mvt = None
     clock = pygame.time.Clock()
@@ -35,11 +43,14 @@ def render_loop(camera, model, texture, vao, texture_unit, pvm_loc):
             camera=camera, window_size=WINDOW_SIZE, prev_mouse_mvt=mouse_mvt
         )
 
+        # clear screen
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
+        # bind texture
         glActiveTexture(GL_TEXTURE0 + texture_unit)
         glBindTexture(GL_TEXTURE_2D, texture)
 
+        # update pvm uniform
         glUniformMatrix4fv(
             pvm_loc,  #  location
             1,  # count
@@ -47,6 +58,7 @@ def render_loop(camera, model, texture, vao, texture_unit, pvm_loc):
             P @ camera.V() @ model.M,  # value
         )
 
+        # bind vao and draw
         glBindVertexArray(vao)
         glDrawElements(
             GL_TRIANGLES,  # mode
@@ -54,8 +66,9 @@ def render_loop(camera, model, texture, vao, texture_unit, pvm_loc):
             GL_UNSIGNED_INT,  # type
             None,  # indices
         )
-        glBindVertexArray(0)
 
+        # unbind vao and texture
+        glBindVertexArray(0)
         glBindTexture(GL_TEXTURE_2D, 0)
 
         pygame.display.flip()
@@ -71,13 +84,7 @@ def main():
     texture = create_texture(texture_img)
     vao = create_vao(model, shaders)
 
-    texture_unit = 0
-    glUseProgram(shaders)
-    sampler_loc = glGetUniformLocation(shaders, "texture_sampler")
-    glUniform1i(sampler_loc, texture_unit)
-    pvm_loc = glGetUniformLocation(shaders, "PVM")
-
-    render_loop(camera, model, texture, vao, texture_unit, pvm_loc)
+    render_loop(camera, model, texture, vao, shaders)
 
 
 if __name__ == "__main__":

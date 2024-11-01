@@ -62,6 +62,7 @@ def create_vao(model, shaders):
 def create_texture(img):
     texture = glGenTextures(1)
     glBindTexture(GL_TEXTURE_2D, texture)
+
     glTexImage2D(
         GL_TEXTURE_2D,  # target
         0,  # level
@@ -73,5 +74,6 @@ def create_texture(img):
         GL_UNSIGNED_BYTE,  # type
         img,  # data
     )
+    glGenerateMipmap(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, 0)
     return texture
