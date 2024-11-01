@@ -1,6 +1,7 @@
 .vscode/
 models/
 textures/
+dev.ipynb
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

@@ -1,5 +1,4 @@
 from OpenGL.GL import *
-import numpy as np
 
 
 def create_vbo(shaders, name, data):
@@ -15,20 +14,21 @@ def create_vbo(shaders, name, data):
     vbo = glGenBuffers(1)
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
     glBufferData(
-        GL_ARRAY_BUFFER,  # target
-        data.nbytes,  # size
-        data,  # data
-        GL_STATIC_DRAW,  # usage
+        target=GL_ARRAY_BUFFER,
+        size=data.nbytes,
+        data=data,
+        usage=GL_STATIC_DRAW,
+    )
+    glVertexAttribPointer(
+        index=location,
+        size=data.shape[-1],
+        type=GL_FLOAT,
+        normalized=GL_FALSE,
+        stride=0,
+        pointer=ctypes.c_void_p(0),
     )
     glEnableVertexAttribArray(location)
-    glVertexAttribPointer(
-        location,  # index
-        data.shape[-1],  # size
-        GL_FLOAT if data.dtype == np.float32 else GL_UNSIGNED_INT,  # type
-        GL_FALSE,  # normalized
-        0,  # stride
-        ctypes.c_void_p(0),  # pointer
-    )
+    # glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
 def create_vao(model, shaders):
@@ -45,17 +45,18 @@ def create_vao(model, shaders):
     glBindVertexArray(vao)
     create_vbo(shaders, "position", model.vertices)
     # create_vbo(shaders, "normal", model.normals)
-    create_vbo(shaders, "texture_coord", model.texture_coords)
+    if model.texture_coords is not None:
+        create_vbo(shaders, "texture_coord", model.texture_coords)
     index_buffer = glGenBuffers(1)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer)
     glBufferData(
-        GL_ELEMENT_ARRAY_BUFFER,  # target
-        model.faces.nbytes,  # size
-        model.faces,  # data
-        GL_STATIC_DRAW,  # usage
+        target=GL_ELEMENT_ARRAY_BUFFER,
+        size=model.faces.nbytes,
+        data=model.faces,
+        usage=GL_STATIC_DRAW,
     )
     glBindVertexArray(0)
-    glBindBuffer(GL_ARRAY_BUFFER, 0)
+    # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
     return vao
 
 

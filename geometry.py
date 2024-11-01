@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 import numpy as np
-from typing import List
 
 from matutils import frustumMatrix, translationMatrix, rotationMatrixX, rotationMatrixY
 
@@ -17,8 +16,8 @@ class Camera:
     distance: float = 5.0
 
     def V(self):
-        D = translationMatrix(-np.array(self.center))
-        R = rotationMatrixX(self.psi) @ rotationMatrixY(self.phi)
+        D = translationMatrix(-self.center)
+        R = np.matmul(rotationMatrixX(self.psi), rotationMatrixY(self.phi))
         T = translationMatrix([0.0, 0.0, -self.distance])
-        V = T @ R @ D
+        V = np.matmul(np.matmul(T, R), D)
         return V

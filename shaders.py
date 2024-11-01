@@ -1,5 +1,6 @@
 from pathlib import Path
-from OpenGL.GL import shaders, GL_VERTEX_SHADER, GL_FRAGMENT_SHADER
+from OpenGL.GL import shaders
+from OpenGL.GL import *
 
 
 def compile_shaders(shaders_name):
