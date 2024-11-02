@@ -1,7 +1,9 @@
 from dataclasses import dataclass
 from OpenGL.GL import *
+import pygame
 
 from model import Model
+from events import handle_events
 
 
 @dataclass
@@ -46,3 +48,18 @@ def draw(render_object, camera, P):
 
     if render_object.texture is not None:
         glBindTexture(GL_TEXTURE_2D, 0)
+
+
+def render_loop(window_size, camera, P, render_objects):
+    running = True
+    mouse_mvt = None
+    clock = pygame.time.Clock()
+    while running:
+        running, camera, mouse_mvt = handle_events(
+            camera=camera, window_size=window_size, prev_mouse_mvt=mouse_mvt
+        )
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
+        for render_object in render_objects:
+            draw(render_object, camera, P)
+        pygame.display.flip()
+        clock.tick(60)

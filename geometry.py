@@ -5,7 +5,7 @@ from matutils import frustumMatrix, translationMatrix, rotationMatrixX, rotation
 
 
 WINDOW_SIZE = (800, 600)
-P = frustumMatrix(l=-1.0, r=1.0, t=-1.0, b=1.0, n=1.5, f=20.0)
+P = frustumMatrix(l=-2.0, r=2.0, t=-1.5, b=1.5, n=1.5, f=20.0)
 
 
 @dataclass

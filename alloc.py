@@ -11,7 +11,7 @@ def create_vbo(shaders, name, data):
         data (np array): data to be stored in the vbo
     """
     location = glGetAttribLocation(shaders, name)
-    vbo = glGenBuffers(1)
+    vbo = glGenBuffers(1)  # todo destroy them
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
     glBufferData(
         target=GL_ARRAY_BUFFER,
