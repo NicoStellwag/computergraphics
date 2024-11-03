@@ -28,7 +28,6 @@ def create_vbo(shaders, name, data):
         pointer=ctypes.c_void_p(0),
     )
     glEnableVertexAttribArray(location)
-    # glBindBuffer(GL_ARRAY_BUFFER, 0)
 
 
 def create_vao(model, shaders):
@@ -48,19 +47,19 @@ def create_vao(model, shaders):
     if model.texture_coords is not None:
         create_vbo(shaders, "texture_coord", model.texture_coords)
     index_buffer = glGenBuffers(1)
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer)
-    glBufferData(
-        target=GL_ELEMENT_ARRAY_BUFFER,
-        size=model.faces.nbytes,
-        data=model.faces,
-        usage=GL_STATIC_DRAW,
-    )
+    if model.faces is not None:
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer)
+        glBufferData(
+            target=GL_ELEMENT_ARRAY_BUFFER,
+            size=model.faces.nbytes,
+            data=model.faces,
+            usage=GL_STATIC_DRAW,
+        )
     glBindVertexArray(0)
-    # glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0)
     return vao
 
 
-def create_texture(img):
+def create_2d_texture(img):
     texture = glGenTextures(1)
     glBindTexture(GL_TEXTURE_2D, texture)
 
@@ -77,4 +76,29 @@ def create_texture(img):
     )
     glGenerateMipmap(GL_TEXTURE_2D)
     glBindTexture(GL_TEXTURE_2D, 0)
+    return texture
+
+
+def create_cubemap_texture(imgs):
+    texture = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_CUBE_MAP, texture)
+    for i, name in enumerate(["px", "nx", "py", "ny", "pz", "nz"]):
+        img = imgs[name]
+        glTexImage2D(
+            GL_TEXTURE_CUBE_MAP_POSITIVE_X + i,  # target
+            0,  # level
+            GL_RGBA,  # internal format
+            img.shape[1],  # width
+            img.shape[0],  # height
+            0,  # border
+            GL_RGBA,  # format
+            GL_UNSIGNED_BYTE,  # type
+            img,  # data
+        )
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
+    glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
+    glBindTexture(GL_TEXTURE_CUBE_MAP, 0)
     return texture

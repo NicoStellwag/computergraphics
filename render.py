@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from OpenGL.GL import *
 import pygame
 
-from model import Model
+from dataload import Model
 from events import handle_events
+from geometry import np_to_opengl
 
 
 @dataclass
@@ -12,6 +13,7 @@ class RenderObject:
     vao: int
     shaders: int
     texture: int
+    texture_type: int
 
 
 def draw(render_object, camera, P):
@@ -25,7 +27,7 @@ def draw(render_object, camera, P):
 
     # set pvm uniform
     pvm_loc = glGetUniformLocation(render_object.shaders, "PVM")
-    pvm = P @ camera.V() @ render_object.model.M
+    pvm = np_to_opengl(P @ camera.V() @ render_object.model.M)
     glUniformMatrix4fv(
         pvm_loc,  #  location
         1,  # count
@@ -35,15 +37,22 @@ def draw(render_object, camera, P):
 
     if render_object.texture is not None:
         glActiveTexture(GL_TEXTURE0)
-        glBindTexture(GL_TEXTURE_2D, render_object.texture)
+        glBindTexture(render_object.texture_type, render_object.texture)
 
     glBindVertexArray(render_object.vao)
-    glDrawElements(
-        GL_TRIANGLES,  # mode
-        render_object.model.faces.size,  # count
-        GL_UNSIGNED_INT,  # type
-        None,  # indices
-    )
+    if render_object.model.faces is not None:
+        glDrawElements(
+            GL_TRIANGLES,  # mode
+            render_object.model.faces.size,  # count
+            GL_UNSIGNED_INT,  # type
+            None,  # indices
+        )
+    else:
+        glDrawArrays(
+            GL_TRIANGLES,  # mode
+            0,  # first
+            render_object.model.vertices.shape[0],  # count
+        )
     glBindVertexArray(0)
 
     if render_object.texture is not None:

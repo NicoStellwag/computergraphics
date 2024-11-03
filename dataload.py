@@ -28,6 +28,20 @@ class SceneRemoveGraphNodes:
         return scene
 
 
+def pillow_to_opengl_rgba(pillow_img):
+    """convert pillow image to np array for opengl
+
+    Args:
+        pillow_img (PIL.Image): pillow image
+
+    Returns:
+        np array: opengl image
+    """
+    opengl_img = pillow_img.transpose(Image.FLIP_TOP_BOTTOM)
+    opengl_img = np.asarray(opengl_img.convert("RGBA"), dtype=np.uint8)
+    return opengl_img
+
+
 def mesh_to_model(mesh, M):
     """generate model struct from trimesh mesh
 
@@ -94,7 +108,5 @@ def load_model(path, M, texture=None, scene_transforms=None, mesh_transforms=Non
         texture_img = None
         model.texture_coords = None  # ! tmp
     if texture == "base_color":
-        texture_img = mesh.visual.material.baseColorTexture
-        texture_img = texture_img.transpose(Image.FLIP_TOP_BOTTOM)
-        texture_img = np.asarray(texture_img.convert("RGBA"), dtype=np.uint8)
+        texture_img = pillow_to_opengl_rgba(mesh.visual.material.baseColorTexture)
     return model, texture_img

@@ -56,7 +56,7 @@ def mousemotion(camera, window_size, prev_mouse_mvt):
         if prev_mouse_mvt is not None:
             mouse_mvt = pygame.mouse.get_rel()
             camera.phi += float(mouse_mvt[0]) / window_size[0]
-            camera.psi -= float(mouse_mvt[1]) / window_size[1]
+            camera.psi += float(mouse_mvt[1]) / window_size[1]
         else:
             mouse_mvt = pygame.mouse.get_rel()
     else:
