@@ -11,6 +11,7 @@ class Model:
     faces: np.ndarray
     normals: np.ndarray
     texture_coords: np.ndarray
+    bounding_box: np.ndarray
     M: np.ndarray
 
 
@@ -67,6 +68,8 @@ def mesh_to_model(mesh, M):
     scale = np.abs(vertices).max()
     vertices /= scale
 
+    bounding_box = np.stack([vertices.min(0), vertices.max(0)], axis=0)
+
     # texture coordinates if present
     if hasattr(mesh.visual, "uv"):
         texture_coords = np.ascontiguousarray(mesh.visual.uv).astype(np.float32)
@@ -78,7 +81,7 @@ def mesh_to_model(mesh, M):
     if texture_coords is not None:
         assert vertices.shape[0] == texture_coords.shape[0]
 
-    return Model(vertices, faces, normals, texture_coords, M)
+    return Model(vertices, faces, normals, texture_coords, bounding_box, M)
 
 
 def load_model(path, M, texture=None, scene_transforms=None, mesh_transforms=None):
@@ -99,7 +102,7 @@ def load_model(path, M, texture=None, scene_transforms=None, mesh_transforms=Non
         if scene_transforms is not None:
             for transform in scene_transforms:
                 mesh = transform(mesh)
-            mesh = mesh.to_mesh()
+        mesh = mesh.to_mesh()
 
     if mesh_transforms is not None:
         for transform in mesh_transforms:

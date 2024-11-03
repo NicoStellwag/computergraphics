@@ -86,7 +86,7 @@ def P():
     fovy = np.radians(60)
     aspect = WINDOW_SIZE[0] / WINDOW_SIZE[1]
     near = 0.1
-    far = 10.0
+    far = 20.0
     top = near * np.tan(fovy / 2)
     right = top * aspect
     return frustum(-right, right, -top, top, near, far)
