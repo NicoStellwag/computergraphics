@@ -18,6 +18,10 @@ class Camera:
         T = translation([0.0, 0.0, -self.distance])
         return T @ R @ D
 
+    def V_no_translation(self):
+        R = rotation_x(self.psi) @ rotation_y(self.phi)
+        return R
+
 
 def rotation_x(angle):
     m = np.eye(4)

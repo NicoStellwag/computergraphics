@@ -92,15 +92,15 @@ def sky_box():
         faces=None,
         normals=None,
         texture_coords=None,
-        M=pose(scale=8.0),
+        M=pose(),
     )
     base_dir = Path("textures/paris_cubemap")
-    nx = pillow_to_opengl_rgba(Image.open(base_dir / "nx.png"))
-    px = pillow_to_opengl_rgba(Image.open(base_dir / "px.png"))
-    ny = pillow_to_opengl_rgba(Image.open(base_dir / "ny.png"))
-    py = pillow_to_opengl_rgba(Image.open(base_dir / "py.png"))
-    nz = pillow_to_opengl_rgba(Image.open(base_dir / "nz.png"))
-    pz = pillow_to_opengl_rgba(Image.open(base_dir / "pz.png"))
+    nx = pillow_to_opengl_rgba(Image.open(base_dir / "nx.png"), omit_flip=True)
+    px = pillow_to_opengl_rgba(Image.open(base_dir / "px.png"), omit_flip=True)
+    ny = pillow_to_opengl_rgba(Image.open(base_dir / "ny.png"), omit_flip=True)
+    py = pillow_to_opengl_rgba(Image.open(base_dir / "py.png"), omit_flip=True)
+    nz = pillow_to_opengl_rgba(Image.open(base_dir / "nz.png"), omit_flip=True)
+    pz = pillow_to_opengl_rgba(Image.open(base_dir / "pz.png"), omit_flip=True)
     texture = create_cubemap_texture(
         {"nx": nx, "px": px, "ny": ny, "py": py, "nz": nz, "pz": pz}
     )

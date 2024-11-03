@@ -40,7 +40,7 @@ def main():
     bunny = bunny_world()
     skybox = sky_box()
 
-    render_loop(WINDOW_SIZE, camera, P(), [rings, bunny, skybox])
+    render_loop(WINDOW_SIZE, camera, P(), [rings, bunny], skybox)
 
 
 if __name__ == "__main__":

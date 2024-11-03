@@ -28,7 +28,7 @@ class SceneRemoveGraphNodes:
         return scene
 
 
-def pillow_to_opengl_rgba(pillow_img):
+def pillow_to_opengl_rgba(pillow_img, omit_flip=False):
     """convert pillow image to np array for opengl
 
     Args:
@@ -37,7 +37,10 @@ def pillow_to_opengl_rgba(pillow_img):
     Returns:
         np array: opengl image
     """
-    opengl_img = pillow_img.transpose(Image.FLIP_TOP_BOTTOM)
+    if omit_flip:
+        opengl_img = pillow_img
+    else:
+        opengl_img = pillow_img.transpose(Image.FLIP_TOP_BOTTOM)
     opengl_img = np.asarray(opengl_img.convert("RGBA"), dtype=np.uint8)
     return opengl_img
 
