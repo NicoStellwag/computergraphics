@@ -7,7 +7,7 @@ import copy
 from shaders import compile_shaders
 from dataload import load_model, SceneRemoveGraphNodes, Model, pillow_to_opengl_rgba
 from alloc import create_vao, create_2d_texture, create_cubemap_texture
-from structs import RenderObject
+from structs import RenderObject, Uniform
 from geometry import pose, translation
 
 
@@ -66,12 +66,17 @@ def olympic_rings():
     model.m = translation([0.0, 0.5 * height, -4.0]) @ model.m
     texture = create_2d_texture(texture_img)
     vao = create_vao(model, shaders)
+    texture_sampler_uniform = Uniform(
+        name="texture_sampler", value=0, type="int"
+    )  # always use texture unit 0 for now
     return RenderObject(
         model=model,
         vao=vao,
         shaders=shaders,
         texture=texture,
         texture_type=GL_TEXTURE_2D,
+        texture_unit=GL_TEXTURE0,
+        uniforms=[texture_sampler_uniform],
     )
 
 
@@ -84,7 +89,13 @@ def bunny_world():
     )
     vao = create_vao(model, shaders)
     return RenderObject(
-        model=model, vao=vao, shaders=shaders, texture=None, texture_type=None
+        model=model,
+        vao=vao,
+        shaders=shaders,
+        texture=None,
+        texture_type=None,
+        texture_unit=None,
+        uniforms=None,
     )
 
 
@@ -116,6 +127,7 @@ def floor():
 
     texture = create_2d_texture(texture_img)
     vao = create_vao(model, shaders)
+    texture_sampler_uniform = Uniform(name="texture_sampler", value=0, type="int")
     return [
         RenderObject(
             model=m,
@@ -123,6 +135,8 @@ def floor():
             shaders=shaders,
             texture=texture,
             texture_type=GL_TEXTURE_2D,
+            texture_unit=GL_TEXTURE0,
+            uniforms=[texture_sampler_uniform],
         )
         for m in model_copies
     ]
@@ -156,10 +170,13 @@ def sky_box():
         {"nx": nx, "px": px, "ny": ny, "py": py, "nz": nz, "pz": pz}
     )
     vao = create_vao(model, shaders)
+    texture_sampler_uniform = Uniform(name="texture_sampler", value=0, type="int")
     return RenderObject(
         model=model,
         vao=vao,
         shaders=shaders,
         texture=texture,
         texture_type=GL_TEXTURE_CUBE_MAP,
+        texture_unit=GL_TEXTURE0,
+        uniforms=[texture_sampler_uniform],
     )

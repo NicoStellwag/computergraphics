@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 import numpy as np
+from typing import Literal, List
 
 
 @dataclass
@@ -21,9 +22,20 @@ class Model:
 
 
 @dataclass
+class Uniform:
+    name: str  # must match shader program
+    value: object
+    type: Literal["int", "mat4"]
+
+
+@dataclass
 class RenderObject:
     model: Model
     vao: int
     shaders: int
     texture: int
     texture_type: int
+    texture_unit: int
+    uniforms: List[
+        Uniform
+    ]  # all uniforms except pvm, which is has to be calculated in the render loop

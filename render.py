@@ -1,38 +1,42 @@
 from OpenGL.GL import *
 import pygame
+import numpy as np
 
 from events import handle_events
-from geometry import np_to_opengl, V, V_no_translation
+from geometry import np_matrix_to_opengl, V, V_no_translation
+from structs import Uniform, RenderObject, Camera
+from typing import List, Tuple
 
 
-def draw(render_object, camera, p, is_skybox=False):
-    # for skybox don't update depth buffer
-    if is_skybox:
-        glDepthMask(GL_FALSE)
+def set_uniform(uniform: Uniform, shaders: int):
+    loc = glGetUniformLocation(shaders, uniform.name)
+    assert loc != -1, f"Uniform {uniform.name} not found in shaders {shaders}"
+    if uniform.type == "int":
+        glUniform1i(loc, uniform.value)
+    elif uniform.type == "mat4":
+        glUniformMatrix4fv(
+            loc,  # location
+            1,  # count
+            GL_FALSE,  # transpose
+            uniform.value,  # value
+        )
 
+
+def draw(render_object: RenderObject, additional_uniforms: List[Uniform] = None):
     # bind shaders
     glUseProgram(render_object.shaders)
 
-    # set texture sampler uniform if needed
-    if render_object.texture is not None:
-        texture_unit = 0
-        sampler_loc = glGetUniformLocation(render_object.shaders, "texture_sampler")
-        glUniform1i(sampler_loc, texture_unit)
-
-    # set pvm uniform
-    pvm_loc = glGetUniformLocation(render_object.shaders, "PVM")
-    v = V_no_translation(camera) if is_skybox else V(camera)
-    pvm = np_to_opengl(p @ v @ render_object.model.m)
-    glUniformMatrix4fv(
-        pvm_loc,  #  location
-        1,  # count
-        GL_FALSE,  # transpose
-        pvm,  # value
-    )
+    # set uniforms
+    if render_object.uniforms is not None:
+        for uniform in render_object.uniforms:
+            set_uniform(uniform, render_object.shaders)
+    if additional_uniforms is not None:
+        for uniform in additional_uniforms:
+            set_uniform(uniform, render_object.shaders)
 
     # bind texture if needed
     if render_object.texture is not None:
-        glActiveTexture(GL_TEXTURE0)
+        glActiveTexture(render_object.texture_unit)
         glBindTexture(render_object.texture_type, render_object.texture)
 
     # bind vao
@@ -60,22 +64,45 @@ def draw(render_object, camera, p, is_skybox=False):
     if render_object.texture is not None:
         glBindTexture(render_object.texture_type, 0)
 
-    # if skybox re-enable depth buffer
-    if is_skybox:
-        glDepthMask(GL_TRUE)
 
-
-def render_loop(window_size, camera, p, render_objects, skybox):
+def render_loop(
+    window_size: Tuple[int, int],
+    camera: Camera,
+    p: np.ndarray,
+    render_objects: List[RenderObject],
+    skybox: RenderObject,
+):
     running = True
     mouse_mvt = None
     clock = pygame.time.Clock()
     while running:
+        # handle pygame events (update camera params, running)
         running, camera, mouse_mvt = handle_events(
             camera=camera, window_size=window_size, prev_mouse_mvt=mouse_mvt
         )
+
+        # clear color and depth buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        draw(skybox, camera, p, is_skybox=True)
+
+        # draw skybox without updating depth buffer
+        glDepthMask(GL_FALSE)
+        skybox_pvm_uniform = Uniform(
+            name="PVM",
+            value=np_matrix_to_opengl(p @ V_no_translation(camera) @ skybox.model.m),
+            type="mat4",
+        )
+        draw(skybox, additional_uniforms=[skybox_pvm_uniform])
+        glDepthMask(GL_TRUE)
+
+        # draw all other objects
         for render_object in render_objects:
-            draw(render_object, camera, p)
+            pvm_uniform = Uniform(
+                name="PVM",
+                value=np_matrix_to_opengl(p @ V(camera) @ render_object.model.m),
+                type="mat4",
+            )
+            draw(render_object, additional_uniforms=[pvm_uniform])
+
+        # update display and limit to 60 fps
         pygame.display.flip()
         clock.tick(60)

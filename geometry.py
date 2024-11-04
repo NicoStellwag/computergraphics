@@ -82,5 +82,5 @@ def P(window_size):
     return frustum(-right, right, -top, top, near, far)
 
 
-def np_to_opengl(m):
+def np_matrix_to_opengl(m):
     return np.ascontiguousarray(m.T)
