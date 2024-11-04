@@ -25,7 +25,7 @@ class Model:
 class Uniform:
     name: str  # must match shader program
     value: object
-    type: Literal["int", "mat4"]
+    type: Literal["int", "float", "mat4", "vec3"]
 
 
 @dataclass

@@ -8,7 +8,8 @@ from shaders import compile_shaders
 from dataload import load_model, SceneRemoveGraphNodes, Model, pillow_to_opengl_rgba
 from alloc import create_vao, create_2d_texture, create_cubemap_texture
 from structs import RenderObject, Uniform
-from geometry import pose, translation
+from geometry import pose, translation, np_matrix_to_opengl
+from light import AMBIENT_STRENGTH, AMBIENT_COLOR, DIFFUSE_POS, DIFFUSE_COLOR
 
 
 CUBEMAP_VERTICES = np.array(
@@ -54,6 +55,21 @@ CUBEMAP_VERTICES = np.array(
 )
 
 
+def light_uniforms(m):
+    ambient_strength = Uniform(
+        name="ambient_light_strength", value=AMBIENT_STRENGTH, type="float"
+    )
+    ambient_color = Uniform(
+        name="ambient_light_color", value=AMBIENT_COLOR, type="vec3"
+    )
+    diffuse_pos = Uniform(name="diffuse_light_position", value=DIFFUSE_POS, type="vec3")
+    diffuse_color = Uniform(
+        name="diffuse_light_color", value=DIFFUSE_COLOR, type="vec3"
+    )
+    model_matrix = Uniform(name="M", value=np_matrix_to_opengl(m), type="mat4")
+    return [ambient_strength, ambient_color, diffuse_pos, diffuse_color, model_matrix]
+
+
 def olympic_rings():
     shaders = compile_shaders("textured_model")
     model, texture_img = load_model(
@@ -66,7 +82,7 @@ def olympic_rings():
     model.m = translation([0.0, 0.5 * height, -4.0]) @ model.m
     texture = create_2d_texture(texture_img)
     vao = create_vao(model, shaders)
-    texture_sampler_uniform = Uniform(
+    texture_sampler = Uniform(
         name="texture_sampler", value=0, type="int"
     )  # always use texture unit 0 for now
     return RenderObject(
@@ -76,7 +92,7 @@ def olympic_rings():
         texture=texture,
         texture_type=GL_TEXTURE_2D,
         texture_unit=GL_TEXTURE0,
-        uniforms=[texture_sampler_uniform],
+        uniforms=[texture_sampler, *light_uniforms(model.m)],
     )
 
 
@@ -136,7 +152,7 @@ def floor():
             texture=texture,
             texture_type=GL_TEXTURE_2D,
             texture_unit=GL_TEXTURE0,
-            uniforms=[texture_sampler_uniform],
+            uniforms=[texture_sampler_uniform, *light_uniforms(m.m)],
         )
         for m in model_copies
     ]

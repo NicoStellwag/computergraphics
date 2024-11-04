@@ -43,7 +43,8 @@ def create_vao(model, shaders):
     vao = glGenVertexArrays(1)
     glBindVertexArray(vao)
     create_vbo(shaders, "position", model.vertices)
-    # create_vbo(shaders, "normal", model.normals)
+    if model.normals is not None:
+        create_vbo(shaders, "normal", model.normals)
     if model.texture_coords is not None:
         create_vbo(shaders, "texture_coord", model.texture_coords)
     index_buffer = glGenBuffers(1)
