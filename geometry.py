@@ -72,6 +72,10 @@ def pose(position=[0.0, 0.0, 0.0], orientation=0.0, scale=[1.0, 1.0, 1.0]):
     return T @ R @ S
 
 
+def normal_from_model_matrix(m):
+    return np.linalg.inv(m[:3, :3]).T
+
+
 def P(window_size):
     fovy = np.radians(60)
     aspect = window_size[0] / window_size[1]

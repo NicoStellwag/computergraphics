@@ -15,6 +15,15 @@ def set_uniform(uniform: Uniform, shaders: int):
         glUniform1i(loc, uniform.value)
     elif uniform.type == "float":
         glUniform1f(loc, uniform.value)
+    elif uniform.type == "vec3":
+        glUniform3f(loc, *uniform.value)
+    elif uniform.type == "mat3":
+        glUniformMatrix3fv(
+            loc,  # location
+            1,  # count
+            GL_FALSE,  # transpose
+            uniform.value,  # value
+        )
     elif uniform.type == "mat4":
         glUniformMatrix4fv(
             loc,  # location
@@ -22,8 +31,6 @@ def set_uniform(uniform: Uniform, shaders: int):
             GL_FALSE,  # transpose
             uniform.value,  # value
         )
-    elif uniform.type == "vec3":
-        glUniform3f(loc, *uniform.value)
 
 
 def draw(render_object: RenderObject, additional_uniforms: List[Uniform] = None):

@@ -8,7 +8,7 @@ from shaders import compile_shaders
 from dataload import load_model, SceneRemoveGraphNodes, Model, pillow_to_opengl_rgba
 from alloc import create_vao, create_2d_texture, create_cubemap_texture
 from structs import RenderObject, Uniform
-from geometry import pose, translation, np_matrix_to_opengl
+from geometry import pose, translation, np_matrix_to_opengl, normal_from_model_matrix
 from light import AMBIENT_STRENGTH, AMBIENT_COLOR, DIFFUSE_POS, DIFFUSE_COLOR
 
 
@@ -67,7 +67,19 @@ def light_uniforms(m):
         name="diffuse_light_color", value=DIFFUSE_COLOR, type="vec3"
     )
     model_matrix = Uniform(name="M", value=np_matrix_to_opengl(m), type="mat4")
-    return [ambient_strength, ambient_color, diffuse_pos, diffuse_color, model_matrix]
+    normal_matrix = Uniform(
+        name="normal_matrix",
+        value=np_matrix_to_opengl(normal_from_model_matrix(m)),
+        type="mat3",
+    )
+    return [
+        ambient_strength,
+        ambient_color,
+        diffuse_pos,
+        diffuse_color,
+        model_matrix,
+        normal_matrix,
+    ]
 
 
 def olympic_rings():
