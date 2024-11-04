@@ -1,18 +1,9 @@
-from dataclasses import dataclass
 import trimesh
 import numpy as np
 from OpenGL.GL import *
 from PIL import Image
 
-
-@dataclass
-class Model:
-    vertices: np.ndarray
-    faces: np.ndarray
-    normals: np.ndarray
-    texture_coords: np.ndarray
-    bounding_box: np.ndarray
-    M: np.ndarray
+from structs import Model
 
 
 class SceneRemoveGraphNodes:
@@ -46,7 +37,7 @@ def pillow_to_opengl_rgba(pillow_img, omit_flip=False):
     return opengl_img
 
 
-def mesh_to_model(mesh, M):
+def mesh_to_model(mesh, m):
     """generate model struct from trimesh mesh
 
     Args:
@@ -81,10 +72,10 @@ def mesh_to_model(mesh, M):
     if texture_coords is not None:
         assert vertices.shape[0] == texture_coords.shape[0]
 
-    return Model(vertices, faces, normals, texture_coords, bounding_box, M)
+    return Model(vertices, faces, normals, texture_coords, bounding_box, m)
 
 
-def load_model(path, M, texture=None, scene_transforms=None, mesh_transforms=None):
+def load_model(path, m, texture=None, scene_transforms=None, mesh_transforms=None):
     """create a model struct from file
 
     Args:
@@ -108,7 +99,7 @@ def load_model(path, M, texture=None, scene_transforms=None, mesh_transforms=Non
         for transform in mesh_transforms:
             mesh = transform(mesh)
 
-    model = mesh_to_model(mesh, M)
+    model = mesh_to_model(mesh, m)
 
     if texture is None:
         texture_img = None

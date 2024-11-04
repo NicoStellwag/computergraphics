@@ -1,22 +1,11 @@
-from dataclasses import dataclass
 from OpenGL.GL import *
 import pygame
 
-from dataload import Model
 from events import handle_events
-from geometry import np_to_opengl
+from geometry import np_to_opengl, V, V_no_translation
 
 
-@dataclass
-class RenderObject:
-    model: Model
-    vao: int
-    shaders: int
-    texture: int
-    texture_type: int
-
-
-def draw(render_object, camera, P, is_skybox=False):
+def draw(render_object, camera, p, is_skybox=False):
     # for skybox don't update depth buffer
     if is_skybox:
         glDepthMask(GL_FALSE)
@@ -32,8 +21,8 @@ def draw(render_object, camera, P, is_skybox=False):
 
     # set pvm uniform
     pvm_loc = glGetUniformLocation(render_object.shaders, "PVM")
-    V = camera.V_no_translation() if is_skybox else camera.V()
-    pvm = np_to_opengl(P @ V @ render_object.model.M)
+    v = V_no_translation(camera) if is_skybox else V(camera)
+    pvm = np_to_opengl(p @ v @ render_object.model.m)
     glUniformMatrix4fv(
         pvm_loc,  #  location
         1,  # count
@@ -76,7 +65,7 @@ def draw(render_object, camera, P, is_skybox=False):
         glDepthMask(GL_TRUE)
 
 
-def render_loop(window_size, camera, P, render_objects, skybox):
+def render_loop(window_size, camera, p, render_objects, skybox):
     running = True
     mouse_mvt = None
     clock = pygame.time.Clock()
@@ -85,8 +74,8 @@ def render_loop(window_size, camera, P, render_objects, skybox):
             camera=camera, window_size=window_size, prev_mouse_mvt=mouse_mvt
         )
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        draw(skybox, camera, P, is_skybox=True)
+        draw(skybox, camera, p, is_skybox=True)
         for render_object in render_objects:
-            draw(render_object, camera, P)
+            draw(render_object, camera, p)
         pygame.display.flip()
         clock.tick(60)

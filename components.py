@@ -7,7 +7,7 @@ import copy
 from shaders import compile_shaders
 from dataload import load_model, SceneRemoveGraphNodes, Model, pillow_to_opengl_rgba
 from alloc import create_vao, create_2d_texture, create_cubemap_texture
-from render import RenderObject
+from structs import RenderObject
 from geometry import pose, translation
 
 
@@ -58,12 +58,12 @@ def olympic_rings():
     shaders = compile_shaders("textured_model")
     model, texture_img = load_model(
         "models/olympic_rings.glb",
-        M=pose(),
+        m=pose(),
         texture="base_color",
         scene_transforms=[SceneRemoveGraphNodes(["Object_23", "Grass"])],
     )
     height = model.bounding_box[1, 1] - model.bounding_box[0, 1]
-    model.M = translation([0.0, 0.5 * height, -4.0]) @ model.M
+    model.m = translation([0.0, 0.5 * height, -4.0]) @ model.m
     texture = create_2d_texture(texture_img)
     vao = create_vao(model, shaders)
     return RenderObject(
@@ -79,7 +79,7 @@ def bunny_world():
     shaders = compile_shaders("plain_model")
     model, _ = load_model(
         "models/bunny_world.obj",
-        M=pose(scale=0.5, position=[1.5, 0.0, 0.0], orientation=180),
+        m=pose(scale=0.5, position=[1.5, 0.0, 0.0], orientation=180),
         texture=None,
     )
     vao = create_vao(model, shaders)
@@ -89,37 +89,42 @@ def bunny_world():
 
 
 def floor():
+    """create a 5x5 grid of floor tiles centered at the origin,
+    each tile is 2x2, so the grid is 10x10
+
+    Returns:
+        List[RenderObject]: floor tiles
+    """
     shaders = compile_shaders("textured_model")
     model, texture_img = load_model(
         "models/floor_material.glb",
-        M=pose(position=[0.0, 0.0, 0.0]),
+        m=pose(position=[0.0, 0.0, 0.0]),
         texture="base_color",
     )
 
-    # create 6x6 grid of floor tiles
     size_x = model.bounding_box[0, 0] - model.bounding_box[1, 0]
     size_z = model.bounding_box[0, 2] - model.bounding_box[1, 2]
     model_copies = []
     for x in range(5):
         for z in range(5):
             c = copy.deepcopy(model)
-            c.M = pose(position=[x * size_x, 0.0, z * size_z])
+            c.m = pose(position=[x * size_x, 0.0, z * size_z])
             model_copies.append(c)
 
     for c in model_copies:
-        c.M = translation([-2 * size_x, 0.0, -2 * size_z]) @ c.M
+        c.m = translation([-2 * size_x, 0.0, -2 * size_z]) @ c.m
 
     texture = create_2d_texture(texture_img)
     vao = create_vao(model, shaders)
     return [
         RenderObject(
-            model=model,
+            model=m,
             vao=vao,
             shaders=shaders,
             texture=texture,
             texture_type=GL_TEXTURE_2D,
         )
-        for model in model_copies
+        for m in model_copies
     ]
 
 
@@ -131,7 +136,7 @@ def sky_box():
         normals=None,
         texture_coords=None,
         bounding_box=None,
-        M=pose(),
+        m=pose(),
     )
     # base_dir = Path("textures/paris_cubemap")
     # px = pillow_to_opengl_rgba(Image.open(base_dir / "px.png"), omit_flip=True)

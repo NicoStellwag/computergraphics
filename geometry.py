@@ -1,26 +1,16 @@
-from dataclasses import dataclass
 import numpy as np
 
 
-WINDOW_SIZE = (800, 600)
+def V(camera):
+    D = translation(-camera.center)
+    R = rotation_x(camera.psi) @ rotation_y(camera.phi)
+    T = translation([0.0, 0.0, -camera.distance])
+    return T @ R @ D
 
 
-@dataclass
-class Camera:
-    center: np.ndarray = np.array([0.0, 0.0, 0.0], dtype=np.float32)
-    psi: float = 0.0  # vertical
-    phi: float = 0.0  # horizontal
-    distance: float = 5.0
-
-    def V(self):
-        D = translation(-self.center)
-        R = rotation_x(self.psi) @ rotation_y(self.phi)
-        T = translation([0.0, 0.0, -self.distance])
-        return T @ R @ D
-
-    def V_no_translation(self):
-        R = rotation_x(self.psi) @ rotation_y(self.phi)
-        return R
+def V_no_translation(camera):
+    R = rotation_x(camera.psi) @ rotation_y(camera.phi)
+    return R
 
 
 def rotation_x(angle):
@@ -82,9 +72,9 @@ def pose(position=[0.0, 0.0, 0.0], orientation=0.0, scale=[1.0, 1.0, 1.0]):
     return T @ R @ S
 
 
-def P():
+def P(window_size):
     fovy = np.radians(60)
-    aspect = WINDOW_SIZE[0] / WINDOW_SIZE[1]
+    aspect = window_size[0] / window_size[1]
     near = 0.1
     far = 20.0
     top = near * np.tan(fovy / 2)

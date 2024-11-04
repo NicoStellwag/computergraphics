@@ -6,9 +6,12 @@ import pygame
 from OpenGL.GL import *
 import numpy as np
 
-from geometry import WINDOW_SIZE, P, Camera
+from structs import Camera
 from components import olympic_rings, bunny_world, sky_box, floor
 from render import render_loop
+from geometry import P
+
+WINDOW_SIZE = (800, 600)
 
 
 def init_pygame(window_size):
@@ -29,6 +32,8 @@ def main():
     init_pygame(WINDOW_SIZE)
     init_opengl(WINDOW_SIZE)
 
+    p = P(WINDOW_SIZE)
+
     camera = Camera(
         center=np.array([0.0, 1.0, 0.0], dtype=np.float32),
         psi=0.0,
@@ -42,7 +47,7 @@ def main():
     render_objects.append(olympic_rings())
     skybox = sky_box()
 
-    render_loop(WINDOW_SIZE, camera, P(), render_objects, skybox)
+    render_loop(WINDOW_SIZE, camera, p, render_objects, skybox)
 
 
 if __name__ == "__main__":
