@@ -3,7 +3,7 @@ import pygame
 import numpy as np
 
 from events import handle_events
-from geometry import np_matrix_to_opengl, V, V_no_translation
+from geometry import np_matrix_to_opengl, V, V_no_translation, camera_position
 from structs import Uniform, RenderObject, Camera
 from typing import List, Tuple
 
@@ -106,13 +106,18 @@ def render_loop(
         glDepthMask(GL_TRUE)
 
         # draw all other objects
+        camera_pos_uniform = Uniform(
+            name="camera_position",
+            value=camera_position(camera).tolist(),
+            type="vec3",
+        )
         for render_object in render_objects:
             pvm_uniform = Uniform(
                 name="PVM",
                 value=np_matrix_to_opengl(p @ V(camera) @ render_object.model.m),
                 type="mat4",
             )
-            draw(render_object, additional_uniforms=[pvm_uniform])
+            draw(render_object, additional_uniforms=[pvm_uniform, camera_pos_uniform])
 
         # update display and limit to 60 fps
         pygame.display.flip()

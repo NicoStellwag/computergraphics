@@ -9,7 +9,14 @@ from dataload import load_model, SceneRemoveGraphNodes, Model, pillow_to_opengl_
 from alloc import create_vao, create_2d_texture, create_cubemap_texture
 from structs import RenderObject, Uniform
 from geometry import pose, translation, np_matrix_to_opengl, normal_from_model_matrix
-from light import AMBIENT_STRENGTH, AMBIENT_COLOR, DIFFUSE_POS, DIFFUSE_COLOR
+from light import (
+    AMBIENT_STRENGTH,
+    AMBIENT_COLOR,
+    DIFFUSE_POS,
+    DIFFUSE_COLOR,
+    SPECULAR_STRENGTH,
+    SPECULAR_SHININESS,
+)
 
 
 CUBEMAP_VERTICES = np.array(
@@ -72,11 +79,20 @@ def light_uniforms(m):
         value=np_matrix_to_opengl(normal_from_model_matrix(m)),
         type="mat3",
     )
+    specular_strength = Uniform(
+        name="specular_light_strength", value=SPECULAR_STRENGTH, type="float"
+    )
+    specular_shininess = Uniform(
+        name="specular_light_shininess", value=SPECULAR_SHININESS, type="float"
+    )
+    # camera position uniform is computed and set in render loop
     return [
         ambient_strength,
         ambient_color,
         diffuse_pos,
         diffuse_color,
+        specular_strength,
+        specular_shininess,
         model_matrix,
         normal_matrix,
     ]
