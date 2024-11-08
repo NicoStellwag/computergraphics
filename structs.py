@@ -38,7 +38,7 @@ class Texture:
 @dataclass
 class RenderObject:
     model: Model
-    texture: Texture
+    textures: List[Texture]
     vao: int
     vbos: List[int]
     shaders: int

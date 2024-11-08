@@ -111,14 +111,14 @@ def olympic_rings():
     texture = create_2d_texture(texture_img, GL_TEXTURE0)
     vao, vbos = create_vao(model, shaders)
     texture_sampler = Uniform(
-        name="texture_sampler", value=0, type="int"
+        name="texture_sampler", value=texture.unit - GL_TEXTURE0, type="int"
     )  # always use texture unit 0 for now
     return RenderObject(
         model=model,
         vao=vao,
         vbos=vbos,
         shaders=shaders,
-        texture=texture,
+        textures=[texture],
         static_uniforms=[texture_sampler, *light_uniforms(model.m)],
     )
 
@@ -151,14 +151,16 @@ def floor():
 
     texture = create_2d_texture(texture_img, GL_TEXTURE0)
     vao, vbos = create_vao(model, shaders)
-    texture_sampler_uniform = Uniform(name="texture_sampler", value=0, type="int")
+    texture_sampler_uniform = Uniform(
+        name="texture_sampler", value=texture.unit - GL_TEXTURE0, type="int"
+    )
     return [
         RenderObject(
             model=m,
             vao=vao,
             vbos=vbos,
             shaders=shaders,
-            texture=texture,
+            textures=[texture],
             static_uniforms=[texture_sampler_uniform, *light_uniforms(m.m)],
         )
         for m in model_copies
@@ -193,12 +195,14 @@ def sky_box():
         {"nx": nx, "px": px, "ny": ny, "py": py, "nz": nz, "pz": pz}, GL_TEXTURE0
     )
     vao, vbos = create_vao(model, shaders)
-    texture_sampler_uniform = Uniform(name="texture_sampler", value=0, type="int")
+    texture_sampler_uniform = Uniform(
+        name="texture_sampler", value=texture.unit - GL_TEXTURE0, type="int"
+    )
     return RenderObject(
         model=model,
         vao=vao,
         vbos=vbos,
         shaders=shaders,
-        texture=texture,
+        textures=[texture],
         static_uniforms=[texture_sampler_uniform],
     )
