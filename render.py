@@ -87,11 +87,15 @@ def render_loop(
 ):
     running = True
     mouse_mvt = None
+    animation_active = False
     clock = pygame.time.Clock()
     while running:
         # handle pygame events (update camera params, running)
-        running, camera, mouse_mvt = handle_events(
-            camera=camera, window_size=window_size, prev_mouse_mvt=mouse_mvt
+        running, camera, mouse_mvt, animation_active = handle_events(
+            camera=camera,
+            window_size=window_size,
+            prev_mouse_mvt=mouse_mvt,
+            prev_animation_active=animation_active,
         )
 
         # clear color and depth buffers
@@ -104,6 +108,10 @@ def render_loop(
             type="vec3",
         )
         for render_object in objects:
+            if animation_active and render_object.animation_function is not None:
+                render_object.model = render_object.animation_function(
+                    render_object.model
+                )
             pvm_uniform = Uniform(
                 name="PVM",
                 value=np_matrix_to_opengl(p @ V(camera) @ render_object.model.m),

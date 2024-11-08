@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 import numpy as np
-from typing import Literal, List
+from typing import Literal, List, Callable
 
 
 @dataclass
@@ -43,3 +43,4 @@ class RenderObject:
     vbos: List[int]
     shaders: int
     static_uniforms: List[Uniform]
+    animation_function: Callable[[Model], Model]

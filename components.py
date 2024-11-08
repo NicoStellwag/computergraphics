@@ -8,7 +8,13 @@ from shaders import compile_shaders
 from dataload import load_model, SceneRemoveGraphNodes, Model, pillow_to_opengl_rgba
 from alloc import create_vao, create_2d_texture, create_cubemap_texture
 from structs import RenderObject, Uniform
-from geometry import pose, translation, np_matrix_to_opengl, normal_from_model_matrix
+from geometry import (
+    pose,
+    translation,
+    np_matrix_to_opengl,
+    normal_from_model_matrix,
+    rotation_y,
+)
 from light import (
     AMBIENT_STRENGTH,
     AMBIENT_COLOR,
@@ -98,6 +104,11 @@ def light_uniforms(m):
     ]
 
 
+def rotation_animation(model: Model):
+    model.m = rotation_y(0.1) @ model.m
+    return model
+
+
 def olympic_rings():
     shaders = compile_shaders("object")
     model, texture_img = load_model(
@@ -112,7 +123,7 @@ def olympic_rings():
     vao, vbos = create_vao(model, shaders)
     texture_sampler = Uniform(
         name="texture_sampler", value=texture.unit - GL_TEXTURE0, type="int"
-    )  # always use texture unit 0 for now
+    )
     return RenderObject(
         model=model,
         vao=vao,
@@ -120,6 +131,7 @@ def olympic_rings():
         shaders=shaders,
         textures=[texture],
         static_uniforms=[texture_sampler, *light_uniforms(model.m)],
+        animation_function=None,
     )
 
 
@@ -162,6 +174,7 @@ def floor():
             shaders=shaders,
             textures=[texture],
             static_uniforms=[texture_sampler_uniform, *light_uniforms(m.m)],
+            animation_function=None,
         )
         for m in model_copies
     ]
@@ -205,4 +218,26 @@ def sky_box():
         shaders=shaders,
         textures=[texture],
         static_uniforms=[texture_sampler_uniform],
+        animation_function=None,
+    )
+
+
+def olympic_logo():
+    shaders = compile_shaders("object")
+    model, _ = load_model(
+        "models/olympics_paris/scene.gltf",
+        m=pose(),
+        texture=None,
+    )
+    height = model.bounding_box[1, 1] - model.bounding_box[0, 1]
+    model.m = translation([0.0, 0.5 * height, 0.0]) @ model.m
+    vao, vbos = create_vao(model, shaders)
+    return RenderObject(
+        model=model,
+        vao=vao,
+        vbos=vbos,
+        shaders=shaders,
+        textures=None,
+        static_uniforms=light_uniforms(model.m),
+        animation_function=rotation_animation,
     )

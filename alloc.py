@@ -129,8 +129,9 @@ def destroy_render_object(render_object: RenderObject):
     glDeleteVertexArrays(1, render_object.vao)
     for vbo in render_object.vbos:
         glDeleteBuffers(1, vbo)
-    for texture in render_object.textures:
-        glDeleteTextures(1, texture.id)
+    if render_object.textures:
+        for texture in render_object.textures:
+            glDeleteTextures(1, texture.id)
     try:
         glDeleteProgram(render_object.shaders)
     except:

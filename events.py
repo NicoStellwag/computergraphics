@@ -1,7 +1,10 @@
+from typing import Tuple
 import pygame
 
+from structs import Camera
 
-def keyboard(event):
+
+def keyboard(event, prev_animation_active):
     """handle keyboard events
 
     Args:
@@ -10,9 +13,14 @@ def keyboard(event):
     Returns:
         bool: running
     """
+    animation_active = prev_animation_active
     if event.key == pygame.K_q:
-        return False
-    return True
+        return False, animation_active
+    if event.key == pygame.K_s:
+        animation_active = True
+    if event.key == pygame.K_f:
+        animation_active = False
+    return True, animation_active
 
 
 def mousebutton(event, camera):
@@ -64,7 +72,12 @@ def mousemotion(camera, window_size, prev_mouse_mvt):
     return camera, mouse_mvt
 
 
-def handle_events(camera, window_size, prev_mouse_mvt):
+def handle_events(
+    camera: Camera,
+    window_size: Tuple[int, int],
+    prev_mouse_mvt: Tuple[int, int],
+    prev_animation_active: bool,
+):
     """handle pygame events (window close, keyboard, mouse),
     modify camera struct accordingly
 
@@ -78,15 +91,18 @@ def handle_events(camera, window_size, prev_mouse_mvt):
     """
     running = True
     mouse_mvt = None
+    animation_active = prev_animation_active
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
         elif event.type == pygame.KEYDOWN:
-            running = keyboard(event=event)
+            running, animation_active = keyboard(
+                event=event, prev_animation_active=prev_animation_active
+            )
         elif event.type == pygame.MOUSEBUTTONDOWN:
             camera = mousebutton(event=event, camera=camera)
         elif event.type == pygame.MOUSEMOTION:
             camera, mouse_mvt = mousemotion(
                 camera=camera, window_size=window_size, prev_mouse_mvt=prev_mouse_mvt
             )
-    return running, camera, mouse_mvt
+    return running, camera, mouse_mvt, animation_active

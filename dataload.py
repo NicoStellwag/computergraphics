@@ -103,7 +103,6 @@ def load_model(path, m, texture=None, scene_transforms=None, mesh_transforms=Non
 
     if texture is None:
         texture_img = None
-        model.texture_coords = None  # ! tmp
     if texture == "base_color":
         texture_img = pillow_to_opengl_rgba(mesh.visual.material.baseColorTexture)
     return model, texture_img

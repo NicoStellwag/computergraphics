@@ -7,7 +7,7 @@ from OpenGL.GL import *
 import numpy as np
 
 from structs import Camera
-from components import olympic_rings, sky_box, floor
+from components import olympic_rings, sky_box, floor, olympic_logo
 from render import render_loop
 from geometry import P
 from alloc import destroy_render_object
@@ -45,6 +45,7 @@ def main():
     objects = []
     objects += floor()
     objects.append(olympic_rings())
+    objects.append(olympic_logo())
     skybox = sky_box()
 
     render_loop(
