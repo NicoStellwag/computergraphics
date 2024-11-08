@@ -1,7 +1,11 @@
 from OpenGL.GL import *
+from typing import Dict
+import numpy as np
+
+from structs import Model, RenderObject
 
 
-def create_vbo(shaders, name, data):
+def create_vbo(shaders: int, name: str, data: np.ndarray):
     """create a vertex buffer object and set the atrribute pointer,
     assumes the vao is already bound
 
@@ -9,6 +13,9 @@ def create_vbo(shaders, name, data):
         shader (int): shader program
         name (str): attribute name (must match shader)
         data (np array): data to be stored in the vbo
+
+    Returns:
+        int: vbo id
     """
     location = glGetAttribLocation(shaders, name)
     vbo = glGenBuffers(1)  # todo destroy them
@@ -28,9 +35,10 @@ def create_vbo(shaders, name, data):
         pointer=ctypes.c_void_p(0),
     )
     glEnableVertexAttribArray(location)
+    return vbo
 
 
-def create_vao(model, shaders):
+def create_vao(model: Model, shaders: int):
     """create a vao and bind the vbos for a given model
 
     Args:
@@ -38,15 +46,16 @@ def create_vao(model, shaders):
         shader (int): shader program
 
     Returns:
-        int: created vao
+        Tuple[int, List[int]]: (vao id, vbo ids)
     """
     vao = glGenVertexArrays(1)
     glBindVertexArray(vao)
-    create_vbo(shaders, "position", model.vertices)
+    vbos = []
+    vbos.append(create_vbo(shaders, "position", model.vertices))
     if model.normals is not None:
-        create_vbo(shaders, "normal", model.normals)
+        vbos.append(create_vbo(shaders, "normal", model.normals))
     if model.texture_coords is not None:
-        create_vbo(shaders, "texture_coord", model.texture_coords)
+        vbos.append(create_vbo(shaders, "texture_coord", model.texture_coords))
     index_buffer = glGenBuffers(1)
     if model.faces is not None:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer)
@@ -57,10 +66,10 @@ def create_vao(model, shaders):
             usage=GL_STATIC_DRAW,
         )
     glBindVertexArray(0)
-    return vao
+    return vao, vbos
 
 
-def create_2d_texture(img):
+def create_2d_texture(img: np.ndarray):
     texture = glGenTextures(1)
     glBindTexture(GL_TEXTURE_2D, texture)
 
@@ -75,13 +84,22 @@ def create_2d_texture(img):
         GL_UNSIGNED_BYTE,  # type
         img,  # data
     )
-    glGenerateMipmap(GL_TEXTURE_2D)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)  # this or mipmap
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     glBindTexture(GL_TEXTURE_2D, 0)
     return texture
 
 
-def create_cubemap_texture(imgs):
-    texture = glGenTextures(1)
+def create_cubemap_texture(imgs: Dict[str, np.ndarray]):
+    """create a static cubemap texture
+
+    Args:
+        imgs (Dict[str, np array]): dict containing 6 faces already prepared as opengl np arrays
+
+    Returns:
+        int: texture id
+    """
+    texture = glGenTextures(1)  # no need for a framebuffer for now
     glBindTexture(GL_TEXTURE_CUBE_MAP, texture)
     for i, name in enumerate(["px", "nx", "py", "ny", "pz", "nz"]):
         img = imgs[name]
@@ -96,10 +114,23 @@ def create_cubemap_texture(imgs):
             GL_UNSIGNED_BYTE,  # type
             img,  # data
         )
+    # interpolate texels for fragments
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+    # clamp to edge to only sample from correct cube face
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0)
     return texture
+
+
+def destroy_render_object(render_object: RenderObject):
+    glDeleteVertexArrays(1, render_object.vao)
+    for vbo in render_object.vbos:
+        glDeleteBuffers(1, vbo)
+    glDeleteTextures(1, render_object.texture)
+    try:
+        glDeleteProgram(render_object.shaders)
+    except:
+        pass  # shaders might be reused between render objects which causes glDeleteProgram to fail

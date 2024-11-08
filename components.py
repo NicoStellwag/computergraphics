@@ -99,7 +99,7 @@ def light_uniforms(m):
 
 
 def olympic_rings():
-    shaders = compile_shaders("textured_model")
+    shaders = compile_shaders("object")
     model, texture_img = load_model(
         "models/olympic_rings.glb",
         m=pose(),
@@ -109,37 +109,19 @@ def olympic_rings():
     height = model.bounding_box[1, 1] - model.bounding_box[0, 1]
     model.m = translation([0.0, 0.5 * height, -4.0]) @ model.m
     texture = create_2d_texture(texture_img)
-    vao = create_vao(model, shaders)
+    vao, vbos = create_vao(model, shaders)
     texture_sampler = Uniform(
         name="texture_sampler", value=0, type="int"
     )  # always use texture unit 0 for now
     return RenderObject(
         model=model,
         vao=vao,
+        vbos=vbos,
         shaders=shaders,
         texture=texture,
         texture_type=GL_TEXTURE_2D,
         texture_unit=GL_TEXTURE0,
-        uniforms=[texture_sampler, *light_uniforms(model.m)],
-    )
-
-
-def bunny_world():
-    shaders = compile_shaders("plain_model")
-    model, _ = load_model(
-        "models/bunny_world.obj",
-        m=pose(scale=0.5, position=[1.5, 0.0, 0.0], orientation=180),
-        texture=None,
-    )
-    vao = create_vao(model, shaders)
-    return RenderObject(
-        model=model,
-        vao=vao,
-        shaders=shaders,
-        texture=None,
-        texture_type=None,
-        texture_unit=None,
-        uniforms=None,
+        static_uniforms=[texture_sampler, *light_uniforms(model.m)],
     )
 
 
@@ -150,7 +132,7 @@ def floor():
     Returns:
         List[RenderObject]: floor tiles
     """
-    shaders = compile_shaders("textured_model")
+    shaders = compile_shaders("object")
     model, texture_img = load_model(
         "models/floor_material.glb",
         m=pose(position=[0.0, 0.0, 0.0]),
@@ -170,17 +152,18 @@ def floor():
         c.m = translation([-2 * size_x, 0.0, -2 * size_z]) @ c.m
 
     texture = create_2d_texture(texture_img)
-    vao = create_vao(model, shaders)
+    vao, vbos = create_vao(model, shaders)
     texture_sampler_uniform = Uniform(name="texture_sampler", value=0, type="int")
     return [
         RenderObject(
             model=m,
             vao=vao,
+            vbos=vbos,
             shaders=shaders,
             texture=texture,
             texture_type=GL_TEXTURE_2D,
             texture_unit=GL_TEXTURE0,
-            uniforms=[texture_sampler_uniform, *light_uniforms(m.m)],
+            static_uniforms=[texture_sampler_uniform, *light_uniforms(m.m)],
         )
         for m in model_copies
     ]
@@ -213,14 +196,15 @@ def sky_box():
     texture = create_cubemap_texture(
         {"nx": nx, "px": px, "ny": ny, "py": py, "nz": nz, "pz": pz}
     )
-    vao = create_vao(model, shaders)
+    vao, vbos = create_vao(model, shaders)
     texture_sampler_uniform = Uniform(name="texture_sampler", value=0, type="int")
     return RenderObject(
         model=model,
         vao=vao,
+        vbos=vbos,
         shaders=shaders,
         texture=texture,
         texture_type=GL_TEXTURE_CUBE_MAP,
         texture_unit=GL_TEXTURE0,
-        uniforms=[texture_sampler_uniform],
+        static_uniforms=[texture_sampler_uniform],
     )

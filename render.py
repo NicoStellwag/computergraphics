@@ -33,16 +33,16 @@ def set_uniform(uniform: Uniform, shaders: int):
         )
 
 
-def draw(render_object: RenderObject, additional_uniforms: List[Uniform] = None):
+def draw(render_object: RenderObject, dynamic_uniforms: List[Uniform] = None):
     # bind shaders
     glUseProgram(render_object.shaders)
 
     # set uniforms
-    if render_object.uniforms is not None:
-        for uniform in render_object.uniforms:
+    if render_object.static_uniforms is not None:
+        for uniform in render_object.static_uniforms:
             set_uniform(uniform, render_object.shaders)
-    if additional_uniforms is not None:
-        for uniform in additional_uniforms:
+    if dynamic_uniforms is not None:
+        for uniform in dynamic_uniforms:
             set_uniform(uniform, render_object.shaders)
 
     # bind texture if needed
@@ -80,7 +80,7 @@ def render_loop(
     window_size: Tuple[int, int],
     camera: Camera,
     p: np.ndarray,
-    render_objects: List[RenderObject],
+    objects: List[RenderObject],
     skybox: RenderObject,
 ):
     running = True
@@ -95,29 +95,32 @@ def render_loop(
         # clear color and depth buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-        # draw skybox without updating depth buffer
-        glDepthMask(GL_FALSE)
-        skybox_pvm_uniform = Uniform(
-            name="PVM",
-            value=np_matrix_to_opengl(p @ V_no_translation(camera) @ skybox.model.m),
-            type="mat4",
-        )
-        draw(skybox, additional_uniforms=[skybox_pvm_uniform])
-        glDepthMask(GL_TRUE)
-
-        # draw all other objects
+        # draw objects
         camera_pos_uniform = Uniform(
             name="camera_position",
             value=camera_position(camera).tolist(),
             type="vec3",
         )
-        for render_object in render_objects:
+        for render_object in objects:
             pvm_uniform = Uniform(
                 name="PVM",
                 value=np_matrix_to_opengl(p @ V(camera) @ render_object.model.m),
                 type="mat4",
             )
-            draw(render_object, additional_uniforms=[pvm_uniform, camera_pos_uniform])
+            draw(render_object, dynamic_uniforms=[pvm_uniform, camera_pos_uniform])
+
+        # draw skybox
+        # no idea why you would want to draw the skybox when
+        # there's an object with z = 1.0 in NDC,
+        # but people seem to do it that way
+        glDepthFunc(GL_LEQUAL)
+        skybox_pvm_uniform = Uniform(
+            name="PVM",
+            value=np_matrix_to_opengl(p @ V_no_translation(camera) @ skybox.model.m),
+            type="mat4",
+        )
+        draw(skybox, dynamic_uniforms=[skybox_pvm_uniform])
+        glDepthFunc(GL_LESS)
 
         # update display and limit to 60 fps
         pygame.display.flip()

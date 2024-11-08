@@ -7,9 +7,10 @@ from OpenGL.GL import *
 import numpy as np
 
 from structs import Camera
-from components import olympic_rings, bunny_world, sky_box, floor
+from components import olympic_rings, sky_box, floor
 from render import render_loop
 from geometry import P
+from alloc import destroy_render_object
 
 WINDOW_SIZE = (800, 600)
 
@@ -41,13 +42,21 @@ def main():
         distance=3.0,
     )
 
-    # bunny = bunny_world()
-    render_objects = []
-    render_objects += floor()
-    render_objects.append(olympic_rings())
+    objects = []
+    objects += floor()
+    objects.append(olympic_rings())
     skybox = sky_box()
 
-    render_loop(WINDOW_SIZE, camera, p, render_objects, skybox)
+    render_loop(
+        window_size=WINDOW_SIZE,
+        camera=camera,
+        p=p,
+        objects=objects,
+        skybox=skybox,
+    )
+
+    for ro in objects + [skybox]:
+        destroy_render_object(ro)
 
 
 if __name__ == "__main__":

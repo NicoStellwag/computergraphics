@@ -5,10 +5,10 @@ from typing import Literal, List
 
 @dataclass
 class Camera:
-    center: np.ndarray = np.array([0.0, 0.0, 0.0], dtype=np.float32)
-    psi: float = 0.0  # vertical
-    phi: float = 0.0  # horizontal
-    distance: float = 5.0
+    center: np.ndarray
+    psi: float
+    phi: float
+    distance: float
 
 
 @dataclass
@@ -32,10 +32,9 @@ class Uniform:
 class RenderObject:
     model: Model
     vao: int
+    vbos: List[int]
     shaders: int
     texture: int
     texture_type: int
     texture_unit: int
-    uniforms: List[
-        Uniform
-    ]  # all uniforms except pvm, which is has to be calculated in the render loop
+    static_uniforms: List[Uniform]
