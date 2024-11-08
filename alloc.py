@@ -2,7 +2,7 @@ from OpenGL.GL import *
 from typing import Dict
 import numpy as np
 
-from structs import Model, RenderObject
+from structs import Model, RenderObject, Texture
 
 
 def create_vbo(shaders: int, name: str, data: np.ndarray):
@@ -69,9 +69,9 @@ def create_vao(model: Model, shaders: int):
     return vao, vbos
 
 
-def create_2d_texture(img: np.ndarray):
-    texture = glGenTextures(1)
-    glBindTexture(GL_TEXTURE_2D, texture)
+def create_2d_texture(img: np.ndarray, unit: int):
+    tex_id = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, tex_id)
 
     glTexImage2D(
         GL_TEXTURE_2D,  # target
@@ -87,10 +87,10 @@ def create_2d_texture(img: np.ndarray):
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)  # this or mipmap
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
     glBindTexture(GL_TEXTURE_2D, 0)
-    return texture
+    return Texture(id=tex_id, type=GL_TEXTURE_2D, unit=unit)
 
 
-def create_cubemap_texture(imgs: Dict[str, np.ndarray]):
+def create_cubemap_texture(imgs: Dict[str, np.ndarray], unit: int):
     """create a static cubemap texture
 
     Args:
@@ -99,8 +99,8 @@ def create_cubemap_texture(imgs: Dict[str, np.ndarray]):
     Returns:
         int: texture id
     """
-    texture = glGenTextures(1)  # no need for a framebuffer for now
-    glBindTexture(GL_TEXTURE_CUBE_MAP, texture)
+    tex_id = glGenTextures(1)  # no need for a framebuffer for now
+    glBindTexture(GL_TEXTURE_CUBE_MAP, tex_id)
     for i, name in enumerate(["px", "nx", "py", "ny", "pz", "nz"]):
         img = imgs[name]
         glTexImage2D(
@@ -122,14 +122,14 @@ def create_cubemap_texture(imgs: Dict[str, np.ndarray]):
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE)
     glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE)
     glBindTexture(GL_TEXTURE_CUBE_MAP, 0)
-    return texture
+    return Texture(id=tex_id, type=GL_TEXTURE_CUBE_MAP, unit=unit)
 
 
 def destroy_render_object(render_object: RenderObject):
     glDeleteVertexArrays(1, render_object.vao)
     for vbo in render_object.vbos:
         glDeleteBuffers(1, vbo)
-    glDeleteTextures(1, render_object.texture)
+    glDeleteTextures(1, render_object.texture.id)
     try:
         glDeleteProgram(render_object.shaders)
     except:

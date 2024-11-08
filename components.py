@@ -108,7 +108,7 @@ def olympic_rings():
     )
     height = model.bounding_box[1, 1] - model.bounding_box[0, 1]
     model.m = translation([0.0, 0.5 * height, -4.0]) @ model.m
-    texture = create_2d_texture(texture_img)
+    texture = create_2d_texture(texture_img, GL_TEXTURE0)
     vao, vbos = create_vao(model, shaders)
     texture_sampler = Uniform(
         name="texture_sampler", value=0, type="int"
@@ -119,8 +119,6 @@ def olympic_rings():
         vbos=vbos,
         shaders=shaders,
         texture=texture,
-        texture_type=GL_TEXTURE_2D,
-        texture_unit=GL_TEXTURE0,
         static_uniforms=[texture_sampler, *light_uniforms(model.m)],
     )
 
@@ -151,7 +149,7 @@ def floor():
     for c in model_copies:
         c.m = translation([-2 * size_x, 0.0, -2 * size_z]) @ c.m
 
-    texture = create_2d_texture(texture_img)
+    texture = create_2d_texture(texture_img, GL_TEXTURE0)
     vao, vbos = create_vao(model, shaders)
     texture_sampler_uniform = Uniform(name="texture_sampler", value=0, type="int")
     return [
@@ -161,8 +159,6 @@ def floor():
             vbos=vbos,
             shaders=shaders,
             texture=texture,
-            texture_type=GL_TEXTURE_2D,
-            texture_unit=GL_TEXTURE0,
             static_uniforms=[texture_sampler_uniform, *light_uniforms(m.m)],
         )
         for m in model_copies
@@ -187,14 +183,14 @@ def sky_box():
     # pz = pillow_to_opengl_rgba(Image.open(base_dir / "pz.png"), omit_flip=True)
     # nz = pillow_to_opengl_rgba(Image.open(base_dir / "nz.png"), omit_flip=True)
     base_dir = Path("textures/night_stars_skybox")
-    px = pillow_to_opengl_rgba(Image.open(base_dir / "right.png"), omit_flip=True)
-    nx = pillow_to_opengl_rgba(Image.open(base_dir / "left.png"), omit_flip=True)
-    py = pillow_to_opengl_rgba(Image.open(base_dir / "top.png"), omit_flip=True)
-    ny = pillow_to_opengl_rgba(Image.open(base_dir / "bottom.png"), omit_flip=True)
-    pz = pillow_to_opengl_rgba(Image.open(base_dir / "front.png"), omit_flip=True)
-    nz = pillow_to_opengl_rgba(Image.open(base_dir / "back.png"), omit_flip=True)
+    px = pillow_to_opengl_rgba(Image.open(base_dir / "right.png"), flip=False)
+    nx = pillow_to_opengl_rgba(Image.open(base_dir / "left.png"), flip=False)
+    py = pillow_to_opengl_rgba(Image.open(base_dir / "top.png"), flip=False)
+    ny = pillow_to_opengl_rgba(Image.open(base_dir / "bottom.png"), flip=False)
+    pz = pillow_to_opengl_rgba(Image.open(base_dir / "front.png"), flip=False)
+    nz = pillow_to_opengl_rgba(Image.open(base_dir / "back.png"), flip=False)
     texture = create_cubemap_texture(
-        {"nx": nx, "px": px, "ny": ny, "py": py, "nz": nz, "pz": pz}
+        {"nx": nx, "px": px, "ny": ny, "py": py, "nz": nz, "pz": pz}, GL_TEXTURE0
     )
     vao, vbos = create_vao(model, shaders)
     texture_sampler_uniform = Uniform(name="texture_sampler", value=0, type="int")
@@ -204,7 +200,5 @@ def sky_box():
         vbos=vbos,
         shaders=shaders,
         texture=texture,
-        texture_type=GL_TEXTURE_CUBE_MAP,
-        texture_unit=GL_TEXTURE0,
         static_uniforms=[texture_sampler_uniform],
     )

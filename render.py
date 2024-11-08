@@ -47,8 +47,8 @@ def draw(render_object: RenderObject, dynamic_uniforms: List[Uniform] = None):
 
     # bind texture if needed
     if render_object.texture is not None:
-        glActiveTexture(render_object.texture_unit)
-        glBindTexture(render_object.texture_type, render_object.texture)
+        glActiveTexture(render_object.texture.unit)
+        glBindTexture(render_object.texture.type, render_object.texture.id)
 
     # bind vao
     glBindVertexArray(render_object.vao)
@@ -73,7 +73,7 @@ def draw(render_object: RenderObject, dynamic_uniforms: List[Uniform] = None):
 
     # unbind texture if needed
     if render_object.texture is not None:
-        glBindTexture(render_object.texture_type, 0)
+        glBindTexture(render_object.texture.type, 0)
 
 
 def render_loop(

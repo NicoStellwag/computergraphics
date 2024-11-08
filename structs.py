@@ -29,12 +29,17 @@ class Uniform:
 
 
 @dataclass
+class Texture:
+    id: int
+    type: int
+    unit: int
+
+
+@dataclass
 class RenderObject:
     model: Model
+    texture: Texture
     vao: int
     vbos: List[int]
     shaders: int
-    texture: int
-    texture_type: int
-    texture_unit: int
     static_uniforms: List[Uniform]
