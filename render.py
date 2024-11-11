@@ -3,7 +3,13 @@ import pygame
 import numpy as np
 
 from events import handle_events
-from geometry import np_matrix_to_opengl, V, V_no_translation, camera_position
+from geometry import (
+    np_matrix_to_opengl,
+    V,
+    V_no_translation,
+    camera_position,
+    normal_from_model_matrix,
+)
 from structs import Uniform, RenderObject, Camera
 from typing import List, Tuple
 
@@ -117,7 +123,25 @@ def render_loop(
                 value=np_matrix_to_opengl(p @ V(camera) @ render_object.model.m),
                 type="mat4",
             )
-            draw(render_object, dynamic_uniforms=[pvm_uniform, camera_pos_uniform])
+            model_matrix = Uniform(
+                name="M", value=np_matrix_to_opengl(render_object.model.m), type="mat4"
+            )
+            normal_matrix = Uniform(
+                name="normal_matrix",
+                value=np_matrix_to_opengl(
+                    normal_from_model_matrix(render_object.model.m)
+                ),
+                type="mat3",
+            )
+            draw(
+                render_object,
+                dynamic_uniforms=[
+                    pvm_uniform,
+                    camera_pos_uniform,
+                    model_matrix,
+                    normal_matrix,
+                ],
+            )
 
         # draw skybox
         # no idea why you would want to draw the skybox when

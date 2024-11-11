@@ -4,15 +4,12 @@ import numpy as np
 from OpenGL.GL import *
 import copy
 
-from shaders import compile_shaders
 from dataload import load_model, SceneRemoveGraphNodes, Model, pillow_to_opengl_rgba
 from alloc import create_vao, create_2d_texture, create_cubemap_texture
 from structs import RenderObject, Uniform
 from geometry import (
     pose,
     translation,
-    np_matrix_to_opengl,
-    normal_from_model_matrix,
     rotation_y,
 )
 from light import (
@@ -68,7 +65,7 @@ CUBEMAP_VERTICES = np.array(
 )
 
 
-def light_uniforms(m):
+def light_uniforms(m: np.ndarray):
     ambient_strength = Uniform(
         name="ambient_light_strength", value=AMBIENT_STRENGTH, type="float"
     )
@@ -79,19 +76,13 @@ def light_uniforms(m):
     diffuse_color = Uniform(
         name="diffuse_light_color", value=DIFFUSE_COLOR, type="vec3"
     )
-    model_matrix = Uniform(name="M", value=np_matrix_to_opengl(m), type="mat4")
-    normal_matrix = Uniform(
-        name="normal_matrix",
-        value=np_matrix_to_opengl(normal_from_model_matrix(m)),
-        type="mat3",
-    )
     specular_strength = Uniform(
         name="specular_light_strength", value=SPECULAR_STRENGTH, type="float"
     )
     specular_shininess = Uniform(
         name="specular_light_shininess", value=SPECULAR_SHININESS, type="float"
     )
-    # camera position uniform is computed and set in render loop
+    # camera position, model matrix, normal matrix uniforms are computed and set in render loop
     return [
         ambient_strength,
         ambient_color,
@@ -99,8 +90,6 @@ def light_uniforms(m):
         diffuse_color,
         specular_strength,
         specular_shininess,
-        model_matrix,
-        normal_matrix,
     ]
 
 
@@ -109,8 +98,7 @@ def rotation_animation(model: Model):
     return model
 
 
-def olympic_rings():
-    shaders = compile_shaders("object")
+def olympic_rings(shaders: int):
     model, texture_img = load_model(
         "models/olympic_rings.glb",
         m=pose(),
@@ -124,25 +112,29 @@ def olympic_rings():
     texture_sampler = Uniform(
         name="texture_sampler", value=texture.unit - GL_TEXTURE0, type="int"
     )
+    reflection_strength = Uniform(name="reflection_strength", value=0.0, type="float")
     return RenderObject(
         model=model,
         vao=vao,
         vbos=vbos,
         shaders=shaders,
         textures=[texture],
-        static_uniforms=[texture_sampler, *light_uniforms(model.m)],
+        static_uniforms=[
+            texture_sampler,
+            reflection_strength,
+            *light_uniforms(model.m),
+        ],
         animation_function=None,
     )
 
 
-def floor():
+def floor(shaders: int):
     """create a 5x5 grid of floor tiles centered at the origin,
     each tile is 2x2, so the grid is 10x10
 
     Returns:
         List[RenderObject]: floor tiles
     """
-    shaders = compile_shaders("object")
     model, texture_img = load_model(
         "models/floor_material.glb",
         m=pose(position=[0.0, 0.0, 0.0]),
@@ -166,6 +158,7 @@ def floor():
     texture_sampler_uniform = Uniform(
         name="texture_sampler", value=texture.unit - GL_TEXTURE0, type="int"
     )
+    reflection_strength = Uniform(name="reflection_strength", value=0.0, type="float")
     return [
         RenderObject(
             model=m,
@@ -173,15 +166,18 @@ def floor():
             vbos=vbos,
             shaders=shaders,
             textures=[texture],
-            static_uniforms=[texture_sampler_uniform, *light_uniforms(m.m)],
+            static_uniforms=[
+                texture_sampler_uniform,
+                reflection_strength,
+                *light_uniforms(m.m),
+            ],
             animation_function=None,
         )
         for m in model_copies
     ]
 
 
-def sky_box():
-    shaders = compile_shaders("cubemap")
+def sky_box(shaders: int):
     model = Model(
         vertices=CUBEMAP_VERTICES,
         faces=None,
@@ -205,11 +201,11 @@ def sky_box():
     pz = pillow_to_opengl_rgba(Image.open(base_dir / "front.png"), flip=False)
     nz = pillow_to_opengl_rgba(Image.open(base_dir / "back.png"), flip=False)
     texture = create_cubemap_texture(
-        {"nx": nx, "px": px, "ny": ny, "py": py, "nz": nz, "pz": pz}, GL_TEXTURE0
+        {"nx": nx, "px": px, "ny": ny, "py": py, "nz": nz, "pz": pz}, GL_TEXTURE1
     )
     vao, vbos = create_vao(model, shaders)
     texture_sampler_uniform = Uniform(
-        name="texture_sampler", value=texture.unit - GL_TEXTURE0, type="int"
+        name="skybox_sampler", value=texture.unit - GL_TEXTURE0, type="int"
     )
     return RenderObject(
         model=model,
@@ -222,8 +218,15 @@ def sky_box():
     )
 
 
-def olympic_logo():
-    shaders = compile_shaders("object")
+def olympic_logo(shaders: int, skybox: RenderObject):
+    assert (
+        skybox.textures is not None and len(skybox.textures) == 1
+    ), "skybox does not have exactly one texture"
+    assert (
+        skybox.static_uniforms is not None and len(skybox.static_uniforms) == 1
+    ), "skybox does not have exactly one static uniform (sampler)"
+    assert skybox.textures[0].unit == GL_TEXTURE1, "skybox texture unit is not 1"
+
     model, _ = load_model(
         "models/olympics_paris/scene.gltf",
         m=pose(),
@@ -232,12 +235,17 @@ def olympic_logo():
     height = model.bounding_box[1, 1] - model.bounding_box[0, 1]
     model.m = translation([0.0, 0.5 * height, 0.0]) @ model.m
     vao, vbos = create_vao(model, shaders)
+    reflection_strength = Uniform(name="reflection_strength", value=1.0, type="float")
     return RenderObject(
         model=model,
         vao=vao,
         vbos=vbos,
         shaders=shaders,
-        textures=None,
-        static_uniforms=light_uniforms(model.m),
+        textures=skybox.textures,
+        static_uniforms=[
+            reflection_strength,
+            *light_uniforms(model.m),
+            *skybox.static_uniforms,
+        ],
         animation_function=rotation_animation,
     )

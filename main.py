@@ -11,6 +11,7 @@ from components import olympic_rings, sky_box, floor, olympic_logo
 from render import render_loop
 from geometry import P
 from alloc import destroy_render_object
+from shaders import compile_shaders
 
 WINDOW_SIZE = (800, 600)
 
@@ -42,11 +43,14 @@ def main():
         distance=3.0,
     )
 
+    object_shaders = compile_shaders("object")
+    skybox_shaders = compile_shaders("cubemap")
+
+    skybox = sky_box(skybox_shaders)
     objects = []
-    objects += floor()
-    objects.append(olympic_rings())
-    objects.append(olympic_logo())
-    skybox = sky_box()
+    objects += floor(object_shaders)
+    objects.append(olympic_rings(object_shaders))
+    objects.append(olympic_logo(object_shaders, skybox))
 
     render_loop(
         window_size=WINDOW_SIZE,
