@@ -1,6 +1,7 @@
 from OpenGL.GL import *
 from typing import Dict
 import numpy as np
+import ctypes
 
 from structs import Model, RenderObject, Texture
 
@@ -18,7 +19,7 @@ def create_vbo(shaders: int, name: str, data: np.ndarray):
         int: vbo id
     """
     location = glGetAttribLocation(shaders, name)
-    vbo = glGenBuffers(1)  # todo destroy them
+    vbo = glGenBuffers(1)
     glBindBuffer(GL_ARRAY_BUFFER, vbo)
     glBufferData(
         target=GL_ARRAY_BUFFER,
@@ -46,7 +47,7 @@ def create_vao(model: Model, shaders: int):
         shader (int): shader program
 
     Returns:
-        Tuple[int, List[int]]: (vao id, vbo ids)
+        Tuple[int, List[int]]: (vao id, list of vbo ids)
     """
     vao = glGenVertexArrays(1)
     glBindVertexArray(vao)
@@ -56,6 +57,8 @@ def create_vao(model: Model, shaders: int):
         vbos.append(create_vbo(shaders, "normal", model.normals))
     if model.texture_coords is not None:
         vbos.append(create_vbo(shaders, "texture_coord", model.texture_coords))
+    if model.colors is not None:
+        vbos.append(create_vbo(shaders, "color", model.colors))
     index_buffer = glGenBuffers(1)
     if model.faces is not None:
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer)
@@ -70,6 +73,15 @@ def create_vao(model: Model, shaders: int):
 
 
 def create_2d_texture(img: np.ndarray, unit: int):
+    """create a static 2d texture
+
+    Args:
+        img (np.ndarray): image formatted for open gl
+        unit (int): open gl texture unit to use
+
+    Returns:
+        Texture: texture struct for the image
+    """
     tex_id = glGenTextures(1)
     glBindTexture(GL_TEXTURE_2D, tex_id)
 
@@ -95,9 +107,10 @@ def create_cubemap_texture(imgs: Dict[str, np.ndarray], unit: int):
 
     Args:
         imgs (Dict[str, np array]): dict containing 6 faces already prepared as opengl np arrays
+        unit (int): open gl texture unit to use
 
     Returns:
-        int: texture id
+        Texture: texture struct for the cubemap
     """
     tex_id = glGenTextures(1)  # no need for a framebuffer for now
     glBindTexture(GL_TEXTURE_CUBE_MAP, tex_id)
@@ -126,6 +139,11 @@ def create_cubemap_texture(imgs: Dict[str, np.ndarray], unit: int):
 
 
 def destroy_render_object(render_object: RenderObject):
+    """free all resources associated with a render object
+
+    Args:
+        render_object (RenderObject): the render object to destroy
+    """
     glDeleteVertexArrays(1, render_object.vao)
     for vbo in render_object.vbos:
         glDeleteBuffers(1, vbo)

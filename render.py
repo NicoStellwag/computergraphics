@@ -15,6 +15,12 @@ from typing import List, Tuple
 
 
 def set_uniform(uniform: Uniform, shaders: int):
+    """set a uniform value in shader program
+
+    Args:
+        uniform (Uniform): uniform struct
+        shaders (int): shader program id
+    """
     loc = glGetUniformLocation(shaders, uniform.name)
     assert loc != -1, f"Uniform {uniform.name} not found in shaders {shaders}"
     if uniform.type == "int":
@@ -40,6 +46,12 @@ def set_uniform(uniform: Uniform, shaders: int):
 
 
 def draw(render_object: RenderObject, dynamic_uniforms: List[Uniform] = None):
+    """draw a render object on the screen
+
+    Args:
+        render_object (RenderObject): the render object to be drawn
+        dynamic_uniforms (List[Uniform], optional): a list of additional uniforms to set. Defaults to None.
+    """
     # bind shaders
     glUseProgram(render_object.shaders)
 
@@ -91,6 +103,15 @@ def render_loop(
     objects: List[RenderObject],
     skybox: RenderObject,
 ):
+    """main render loop
+
+    Args:
+        window_size (Tuple[int, int]): window size (width, height)
+        camera (Camera): camera object initiliazed with position and view angles
+        p (np.ndarray): projection matrix
+        objects (List[RenderObject]): the list of normal objects to be drawn
+        skybox (RenderObject): sky box render object
+    """
     running = True
     mouse_mvt = None
     animation_active = False
@@ -107,7 +128,7 @@ def render_loop(
         # clear color and depth buffers
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
-        # draw objects
+        # compute and set dynamic uniforms, draw objects
         camera_pos_uniform = Uniform(
             name="camera_position",
             value=camera_position(camera).tolist(),
@@ -123,10 +144,10 @@ def render_loop(
                 value=np_matrix_to_opengl(p @ V(camera) @ render_object.model.m),
                 type="mat4",
             )
-            model_matrix = Uniform(
+            model_matrix_uniform = Uniform(
                 name="M", value=np_matrix_to_opengl(render_object.model.m), type="mat4"
             )
-            normal_matrix = Uniform(
+            normal_matrix_uniform = Uniform(
                 name="normal_matrix",
                 value=np_matrix_to_opengl(
                     normal_from_model_matrix(render_object.model.m)
@@ -138,8 +159,8 @@ def render_loop(
                 dynamic_uniforms=[
                     pvm_uniform,
                     camera_pos_uniform,
-                    model_matrix,
-                    normal_matrix,
+                    model_matrix_uniform,
+                    normal_matrix_uniform,
                 ],
             )
 

@@ -6,8 +6,8 @@ from typing import Literal, List, Callable
 @dataclass
 class Camera:
     center: np.ndarray
-    psi: float
-    phi: float
+    psi: float  # x
+    phi: float  # y
     distance: float
 
 
@@ -16,6 +16,7 @@ class Model:
     vertices: np.ndarray
     faces: np.ndarray
     normals: np.ndarray
+    colors: np.ndarray
     texture_coords: np.ndarray
     bounding_box: np.ndarray  # 2 x 3
     m: np.ndarray

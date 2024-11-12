@@ -25,9 +25,8 @@ def compile_program(*shaders, **named):
         glAttachShader(program, shader)
     program = gl_shaders.ShaderProgram(program)
     glLinkProgram(program)
-    if named[
-        "set_texture_units"
-    ]:  # * make validate work with multiple texture samplers
+    # * make validation succeed with multiple texture samplers
+    if named["set_texture_units"]:
         glUseProgram(program)
         glUniform1i(glGetUniformLocation(program, "texture_sampler"), 0)
         glUniform1i(glGetUniformLocation(program, "skybox_sampler"), 1)
@@ -40,7 +39,15 @@ def compile_program(*shaders, **named):
     return program
 
 
-def compile_shaders(shaders_name):
+def compile_shaders(shaders_name: str):
+    """compile glsl code into a shader program
+
+    Args:
+        shaders_name (str): name of the directory under ./shaders containing the sources
+
+    Returns:
+        int: shader program id
+    """
     shaders_dir = Path("shaders") / shaders_name
     vertex_shader_file = shaders_dir / "vertex_shader.glsl"
     fragment_shader_file = shaders_dir / "fragment_shader.glsl"

@@ -3,10 +3,12 @@
 in vec3 position;
 in vec3 normal;
 in vec2 texture_coord;
+in vec4 color;
 
 out vec3 pass_normal;
 out vec2 pass_texture_coord;
 out vec3 pass_wc_position;
+out vec4 pass_color;
 
 uniform mat4 PVM;
 uniform mat4 M;
@@ -21,6 +23,9 @@ void main() {
 
     // pass texture coords
     pass_texture_coord = texture_coord;
+
+    // pass color
+    pass_color = color;
 
     // pass position in world coordinates
     vec4 wc_pos = M * vec4(position, 1.0);

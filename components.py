@@ -65,7 +65,12 @@ CUBEMAP_VERTICES = np.array(
 )
 
 
-def light_uniforms(m: np.ndarray):
+def light_uniforms():
+    """construct a list of static uniforms for lighting computations
+
+    Returns:
+        List[Uniform]: uniforms for lighting computations
+    """
     ambient_strength = Uniform(
         name="ambient_light_strength", value=AMBIENT_STRENGTH, type="float"
     )
@@ -94,11 +99,28 @@ def light_uniforms(m: np.ndarray):
 
 
 def rotation_animation(model: Model):
-    model.m = rotation_y(0.1) @ model.m
+    """rotate a given model around the y-axis by 0.1 radians
+
+    Args:
+        model (Model): model struct to be rotated
+
+    Returns:
+        Model: rotated model struct
+    """
+    pos = model.m[:3, 3]
+    model.m = translation(pos) @ rotation_y(0.1) @ translation(-pos) @ model.m
     return model
 
 
 def olympic_rings(shaders: int):
+    """construct a render object for the olympic rings model
+
+    Args:
+        shaders (int): shader program
+
+    Returns:
+        RenderObject: olympic rings render object
+    """
     model, texture_img = load_model(
         "models/olympic_rings.glb",
         m=pose(),
@@ -113,6 +135,7 @@ def olympic_rings(shaders: int):
         name="texture_sampler", value=texture.unit - GL_TEXTURE0, type="int"
     )
     reflection_strength = Uniform(name="reflection_strength", value=0.0, type="float")
+    use_vertice_colors = Uniform(name="use_colors", value=0, type="int")
     return RenderObject(
         model=model,
         vao=vao,
@@ -122,7 +145,8 @@ def olympic_rings(shaders: int):
         static_uniforms=[
             texture_sampler,
             reflection_strength,
-            *light_uniforms(model.m),
+            use_vertice_colors,
+            *light_uniforms(),
         ],
         animation_function=None,
     )
@@ -132,8 +156,11 @@ def floor(shaders: int):
     """create a 5x5 grid of floor tiles centered at the origin,
     each tile is 2x2, so the grid is 10x10
 
+    Args:
+        shaders (int): shader program
+
     Returns:
-        List[RenderObject]: floor tiles
+        List[RenderObject]: list of floor tile render objects
     """
     model, texture_img = load_model(
         "models/floor_material.glb",
@@ -159,6 +186,7 @@ def floor(shaders: int):
         name="texture_sampler", value=texture.unit - GL_TEXTURE0, type="int"
     )
     reflection_strength = Uniform(name="reflection_strength", value=0.0, type="float")
+    use_vertice_colors = Uniform(name="use_colors", value=0, type="int")
     return [
         RenderObject(
             model=m,
@@ -169,7 +197,8 @@ def floor(shaders: int):
             static_uniforms=[
                 texture_sampler_uniform,
                 reflection_strength,
-                *light_uniforms(m.m),
+                use_vertice_colors,
+                *light_uniforms(),
             ],
             animation_function=None,
         )
@@ -178,28 +207,37 @@ def floor(shaders: int):
 
 
 def sky_box(shaders: int):
+    """create a render object for a skybox
+
+    Args:
+        shaders (int): shader program
+
+    Returns:
+        RenderObject: sky box render object
+    """
     model = Model(
         vertices=CUBEMAP_VERTICES,
         faces=None,
         normals=None,
+        colors=None,
         texture_coords=None,
         bounding_box=None,
         m=pose(),
     )
-    # base_dir = Path("textures/paris_cubemap")
-    # px = pillow_to_opengl_rgba(Image.open(base_dir / "px.png"), omit_flip=True)
-    # nx = pillow_to_opengl_rgba(Image.open(base_dir / "nx.png"), omit_flip=True)
-    # py = pillow_to_opengl_rgba(Image.open(base_dir / "py.png"), omit_flip=True)
-    # ny = pillow_to_opengl_rgba(Image.open(base_dir / "ny.png"), omit_flip=True)
-    # pz = pillow_to_opengl_rgba(Image.open(base_dir / "pz.png"), omit_flip=True)
-    # nz = pillow_to_opengl_rgba(Image.open(base_dir / "nz.png"), omit_flip=True)
-    base_dir = Path("textures/night_stars_skybox")
-    px = pillow_to_opengl_rgba(Image.open(base_dir / "right.png"), flip=False)
-    nx = pillow_to_opengl_rgba(Image.open(base_dir / "left.png"), flip=False)
-    py = pillow_to_opengl_rgba(Image.open(base_dir / "top.png"), flip=False)
-    ny = pillow_to_opengl_rgba(Image.open(base_dir / "bottom.png"), flip=False)
-    pz = pillow_to_opengl_rgba(Image.open(base_dir / "front.png"), flip=False)
-    nz = pillow_to_opengl_rgba(Image.open(base_dir / "back.png"), flip=False)
+    base_dir = Path("textures/paris_cubemap")
+    px = pillow_to_opengl_rgba(Image.open(base_dir / "px.png"), flip=False)
+    nx = pillow_to_opengl_rgba(Image.open(base_dir / "nx.png"), flip=False)
+    py = pillow_to_opengl_rgba(Image.open(base_dir / "py.png"), flip=False)
+    ny = pillow_to_opengl_rgba(Image.open(base_dir / "ny.png"), flip=False)
+    pz = pillow_to_opengl_rgba(Image.open(base_dir / "pz.png"), flip=False)
+    nz = pillow_to_opengl_rgba(Image.open(base_dir / "nz.png"), flip=False)
+    # base_dir = Path("textures/night_stars_skybox")
+    # px = pillow_to_opengl_rgba(Image.open(base_dir / "right.png"), flip=False)
+    # nx = pillow_to_opengl_rgba(Image.open(base_dir / "left.png"), flip=False)
+    # py = pillow_to_opengl_rgba(Image.open(base_dir / "top.png"), flip=False)
+    # ny = pillow_to_opengl_rgba(Image.open(base_dir / "bottom.png"), flip=False)
+    # pz = pillow_to_opengl_rgba(Image.open(base_dir / "front.png"), flip=False)
+    # nz = pillow_to_opengl_rgba(Image.open(base_dir / "back.png"), flip=False)
     texture = create_cubemap_texture(
         {"nx": nx, "px": px, "ny": ny, "py": py, "nz": nz, "pz": pz}, GL_TEXTURE1
     )
@@ -219,6 +257,15 @@ def sky_box(shaders: int):
 
 
 def olympic_logo(shaders: int, skybox: RenderObject):
+    """create a render object for the olympic logo model
+
+    Args:
+        shaders (int): shader program
+        skybox (RenderObject): skybox render object to be used for reflections
+
+    Returns:
+        RenderObject: olympic logo render object
+    """
     assert (
         skybox.textures is not None and len(skybox.textures) == 1
     ), "skybox does not have exactly one texture"
@@ -229,13 +276,13 @@ def olympic_logo(shaders: int, skybox: RenderObject):
 
     model, _ = load_model(
         "models/olympics_paris/scene.gltf",
-        m=pose(),
-        texture=None,
+        m=pose(position=[1.5, 0.0, 0.0]),
     )
     height = model.bounding_box[1, 1] - model.bounding_box[0, 1]
     model.m = translation([0.0, 0.5 * height, 0.0]) @ model.m
     vao, vbos = create_vao(model, shaders)
     reflection_strength = Uniform(name="reflection_strength", value=1.0, type="float")
+    use_vertice_colors = Uniform(name="use_colors", value=0, type="int")
     return RenderObject(
         model=model,
         vao=vao,
@@ -244,8 +291,45 @@ def olympic_logo(shaders: int, skybox: RenderObject):
         textures=skybox.textures,
         static_uniforms=[
             reflection_strength,
-            *light_uniforms(model.m),
+            use_vertice_colors,
+            *light_uniforms(),
             *skybox.static_uniforms,
         ],
         animation_function=rotation_animation,
+    )
+
+
+def human_body(shaders: int):
+    """create a render object for the human body model
+
+    Args:
+        shaders (int): shader program
+
+    Returns:
+        RenderObject: render object for the human body model
+    """
+    scale = 0.5
+    model, _ = load_model(
+        path="models/human_body/scene.gltf",
+        m=pose(position=[-1.5, 0.0, 0.0], scale=scale),
+        texture="uniform",
+        uniform_color=[0.12941176, 0.50196078, 0.74901961],
+    )
+    height = (model.bounding_box[1, 1] - model.bounding_box[0, 1]) * scale
+    model.m = translation([0.0, 0.5 * height, 0.0]) @ model.m
+    vao, vbos = create_vao(model, shaders)
+    reflection_strength = Uniform(name="reflection_strength", value=0.0, type="float")
+    use_vertice_colors = Uniform(name="use_colors", value=1, type="int")
+    return RenderObject(
+        model=model,
+        vao=vao,
+        vbos=vbos,
+        shaders=shaders,
+        textures=None,
+        static_uniforms=[
+            reflection_strength,
+            use_vertice_colors,
+            *light_uniforms(),
+        ],
+        animation_function=None,
     )

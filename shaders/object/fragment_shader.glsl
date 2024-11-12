@@ -3,10 +3,12 @@
 in vec3 pass_wc_position;
 in vec3 pass_normal;
 in vec2 pass_texture_coord;
+in vec4 pass_color;
 
 out vec4 frag_color;
 
 // texture uniforms
+uniform int use_colors;
 uniform sampler2D texture_sampler;
 
 // ambient light uniforms
@@ -44,6 +46,9 @@ vec3 specular_light(vec3 view_direction, vec3 normed_normal) {
 }
 
 vec4 object_color() {
+    if (use_colors == 1) {
+        return pass_color;
+    }
     return texture(texture_sampler, pass_texture_coord);
 }
 
@@ -59,6 +64,8 @@ vec3 reflection(vec3 view_direction, vec3 normed_normal) {
 }
 
 void main() {
+    // phong lighting model
+
     // avoid redundant computation
     vec3 view_direction = normalize(camera_position - pass_wc_position);
     vec3 normed_normal = normalize(pass_normal);

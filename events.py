@@ -9,9 +9,10 @@ def keyboard(event, prev_animation_active):
 
     Args:
         event (pygame event): event
+        prev_animation_active (bool): previous animation state
 
     Returns:
-        bool: running
+        Tuple[bool, bool]: (running, animation_active)
     """
     animation_active = prev_animation_active
     if event.key == pygame.K_q:
@@ -85,9 +86,10 @@ def handle_events(
         camera (Camera): camera struct
         window_size (Tuple[int, int]): window size
         prev_mouse_mvt (pygame mouse get rel): previous mouse movement
+        prev_animation_active (bool): previous animation state
 
     Returns:
-        (running, camera, mouse_mvt): running bool, potentially modified camera struct and mouse movement
+        (running, camera, mouse_mvt, animation_active): running bool, potentially modified camera struct, mouse movement, and animation state
     """
     running = True
     mouse_mvt = None
