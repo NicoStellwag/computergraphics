@@ -59,8 +59,8 @@ def create_vao(model: Model, shaders: int):
         vbos.append(create_vbo(shaders, "texture_coord", model.texture_coords))
     if model.colors is not None:
         vbos.append(create_vbo(shaders, "color", model.colors))
-    index_buffer = glGenBuffers(1)
     if model.faces is not None:
+        index_buffer = glGenBuffers(1)
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer)
         glBufferData(
             target=GL_ELEMENT_ARRAY_BUFFER,

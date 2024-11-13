@@ -32,14 +32,12 @@ vec3 ambient_light() {
     return ambient_light_strength * ambient_light_color;
 }
 
-vec3 diffuse_light(vec3 normed_normal) {
-    vec3 light_direction = normalize(diffuse_light_position - pass_wc_position);
+vec3 diffuse_light(vec3 normed_normal, vec3 light_direction) {
     float sim = max(dot(normed_normal, light_direction), 0.0);
     return diffuse_light_color * sim;
 }
 
-vec3 specular_light(vec3 view_direction, vec3 normed_normal) {
-    vec3 light_direction = normalize(diffuse_light_position - pass_wc_position);
+vec3 specular_light(vec3 view_direction, vec3 normed_normal, vec3 light_direction) {
     vec3 reflection_direction = reflect(-light_direction, normed_normal);
     float spec = pow(max(dot(view_direction, reflection_direction), 0), specular_light_shininess);
     return specular_light_strength * spec * diffuse_light_color;
@@ -69,8 +67,9 @@ void main() {
     // avoid redundant computation
     vec3 view_direction = normalize(camera_position - pass_wc_position);
     vec3 normed_normal = normalize(pass_normal);
+    vec3 light_direction = normalize(diffuse_light_position - pass_wc_position);
 
-    vec3 light = ambient_light() + diffuse_light(normed_normal) + specular_light(view_direction, normed_normal);
+    vec3 light = ambient_light() + diffuse_light(normed_normal, light_direction) + specular_light(view_direction, normed_normal, light_direction);
     vec3 reflection = reflection(view_direction, normed_normal);
     vec4 texture_color = object_color();
     vec4 mixed_color = vec4((1.0 - reflection_strength) * texture_color.rgb + reflection_strength * reflection, texture_color.a);
